@@ -16,7 +16,8 @@ sys.path.insert(0, os.path.join(tree, "ci"))
 import testcase as tc  # noqa: E402
 
 cases = []
-for f in ["dxa.yaml", "tensor_wg.yaml", "tensor.yaml"]:
+categories = os.environ.get("SWEEP_CATEGORIES", "dxa.yaml tensor_wg.yaml tensor.yaml").split()
+for f in categories:
     for c in tc.load_category(os.path.join(tree, "ci", "testcases", f)):
         if c.driver == "simx" and c.via == "blackbox" and c.applies_to_xlen(32) and not c.check:
             cases.append(c)

@@ -1,0 +1,24 @@
+id	status	seconds
+dxa:dxa_copy-3:simx	PASS	7
+dxa:dxa_copy-2c2s:simx	PASS	96
+dxa:dxa_copy_mcast-5:simx	PASS	96
+dxa:cta_cluster-1:simx	PASS	7
+dxa:cta_cluster-relaunch:simx	PASS	95
+dxa:sgemm2_dxa_mcast-wide:simx	PASS	13
+dxa:sgemm2_dxa_mcast-mc:simx	PASS	96
+dxa:sgemm_tcu_wg_dxa_mcast-pad:simx	PASS	26
+dxa:sgemm2_dxa-3:simx	PASS	3
+dxa:sgemm2_dxa-l2-1:simx	PASS	96
+dxa:sgemm_tcu_wg_dxa-1:simx	PASS	29
+dxa:sgemm_tcu_wg_sp_dxa-1:simx	PASS	24
+dxa:sgemm_tcu_wg_sp_dxa-ldm:simx	PASS	15
+tensor_wg:sgemm_tcu_wg-2:simx	PASS	98
+tensor_wg:sgemm_tcu_wg-8:simx	PASS	26
+tensor_wg:sgemm_tcu_wg-a-offset:simx	PASS	8
+tensor_wg:sgemm_tcu_wg_sp-1:simx	PASS	28
+tensor_wg:sgemm_tcu_sp-wgmma-1:simx	PASS	28
+tensor_wg:sgemm_tcu_wg_mx-baseline:simx	PASS	25
+tensor_wg:sgemm_tcu_wg_mx-fedp2k-rs:simx	PASS	16
+tensor_wg:sgemm_tcu_wg-ldm-1:simx	PASS	14
+tensor_wg:sgemm_tcu_wg_sp-ldm:simx	PASS	15
+SHARD DONE

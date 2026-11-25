@@ -29,6 +29,13 @@ We're a small team designing GPU and AI-accelerator hardware in the open. We sta
 
 Full write-up: [docs/week1-report.md](docs/week1-report.md). Results page: [results/week1-results.html](results/week1-results.html).
 
+**Offered upstream:** we offered the copy-engine fix to Vortex as a draft pull request: [vortexgpgpu/vortex#506](https://github.com/vortexgpgpu/vortex/pull/506). We retested it on Vortex's latest code (master `d6e0c68`), on its own and with the flag on:
+- 1.91× on Vortex's shipped config.
+- 1.71× on average over the 9 copy-engine workloads.
+- 68 of 68 official dxa and tensor_wg simx cases pass.
+
+Logs: [runs/upstream-pr/](runs/upstream-pr/).
+
 ### Honest caveats
 
 1. **Simulator only, so far.** Both changes are in Vortex's cycle-level C++ simulator (SimX), not yet in its Verilog. Vortex's CI holds SimX to the Verilog's timing within a tolerance, so this is a strong signal, not proof. The Verilog version is next.
