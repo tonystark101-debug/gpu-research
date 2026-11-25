@@ -1,0 +1,42 @@
+CONFIGS=-DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_TCU_TYPE=DPI -DVX_CFG_DXA_SCATTER_COALESCE
+./ci/blackbox.sh --driver=simx --app=sgemm_tcu_wg_dxa_mcast --args=-p 16
+CONFIGS=-DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_TCU_TYPE=DPI -DVX_CFG_DXA_SCATTER_COALESCE
+Running: CONFIGS="-DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_TCU_TYPE=DPI -DVX_CFG_DXA_SCATTER_COALESCE" make -C "./ci/../tests/regression/sgemm_tcu_wg_dxa_mcast" runtime-simx > /dev/null
+Running: OPTS="-p 16" CONFIGS="-DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_TCU_TYPE=DPI -DVX_CFG_DXA_SCATTER_COALESCE" make -C "./ci/../tests/regression/sgemm_tcu_wg_dxa_mcast" run-simx
+make: Entering directory '/home/User/vortex_ours3/build/tests/regression/sgemm_tcu_wg_dxa_mcast'
+CONFIGS="-DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_TCU_TYPE=DPI -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_NUM_WARPS=16 -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_TCU_WGMMA_ENABLE -DWGMMA_RS"     make -C /home/User/vortex_ours3/build/sw/runtime/stub DESTDIR=/home/User/vortex_ours3/build/sw/runtime
+make[1]: Entering directory '/home/User/vortex_ours3/build/sw/runtime/stub'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/home/User/vortex_ours3/build/sw/runtime/stub'
+CONFIGS="-DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_TCU_TYPE=DPI -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_NUM_WARPS=16 -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_TCU_WGMMA_ENABLE -DWGMMA_RS"     make -C /home/User/vortex_ours3/build/sw/runtime/simx DESTDIR=/home/User/vortex_ours3/build/sw/runtime
+make[1]: Entering directory '/home/User/vortex_ours3/build/sw/runtime/simx'
+DESTDIR=/home/User/vortex_ours3/build/sw/runtime make -C /home/User/vortex_ours3/build/sim/simx /home/User/vortex_ours3/build/sw/runtime/libsimx.so
+make[2]: Entering directory '/home/User/vortex_ours3/build/sim/simx'
+make[2]: Leaving directory '/home/User/vortex_ours3/build/sim/simx'
+make[1]: Leaving directory '/home/User/vortex_ours3/build/sw/runtime/simx'
+LD_LIBRARY_PATH=/home/User/vortex_ours3/build/sw/runtime: VORTEX_DRIVER=simx ./sgemm_tcu_wg_dxa_mcast -p 16
+open device connection
+input type: fp16, output type: fp32
+WGMMA tile: M=4, N=8, K=8
+CTA tile: M=16 (warps=4)
+grid: 8x4
+block: 16x1
+matrix A: 64x64
+matrix B: 64x64
+smem: 400 bytes
+mc_group_size=4 (intra-core multicast)
+allocate device memory
+A_addr=0x30000
+B_addr=0x32000
+C_addr=0x34000
+upload source data
+load kernel module
+start device
+download result
+wait for completion
+Elapsed time: 300 ms
+verify result
+reference drift: max=3 ULP, bound=12 ULP (K=64)
+PERF: instrs=42688, cycles=71839, IPC=0.594
+PASSED!
+make: Leaving directory '/home/User/vortex_ours3/build/tests/regression/sgemm_tcu_wg_dxa_mcast'

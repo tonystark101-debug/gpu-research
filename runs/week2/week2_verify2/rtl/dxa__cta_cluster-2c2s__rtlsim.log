@@ -1,0 +1,26 @@
+CONFIGS=-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE
+./ci/blackbox.sh --driver=rtlsim --app=cta_cluster --clusters=2 --cores=2 --l2cache
+CONFIGS=-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_NUM_CLUSTERS=2 -DVX_CFG_NUM_CORES=2 -DVX_CFG_L2_ENABLE
+Running: CONFIGS="-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_NUM_CLUSTERS=2 -DVX_CFG_NUM_CORES=2 -DVX_CFG_L2_ENABLE" make -C "./ci/../tests/regression/cta_cluster" runtime-rtlsim > /dev/null
+Running: CONFIGS="-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_NUM_CLUSTERS=2 -DVX_CFG_NUM_CORES=2 -DVX_CFG_L2_ENABLE" make -C "./ci/../tests/regression/cta_cluster" run-rtlsim
+make: Entering directory '/home/User/vortex_ours1/build/tests/regression/cta_cluster'
+CONFIGS="-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_NUM_CLUSTERS=2 -DVX_CFG_NUM_CORES=2 -DVX_CFG_L2_ENABLE"     make -C /home/User/vortex_ours1/build/sw/runtime/stub DESTDIR=/home/User/vortex_ours1/build/sw/runtime
+make[1]: Entering directory '/home/User/vortex_ours1/build/sw/runtime/stub'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/home/User/vortex_ours1/build/sw/runtime/stub'
+CONFIGS="-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_NUM_CLUSTERS=2 -DVX_CFG_NUM_CORES=2 -DVX_CFG_L2_ENABLE"     make -C /home/User/vortex_ours1/build/sw/runtime/rtlsim DESTDIR=/home/User/vortex_ours1/build/sw/runtime
+make[1]: Entering directory '/home/User/vortex_ours1/build/sw/runtime/rtlsim'
+DESTDIR=/home/User/vortex_ours1/build/sw/runtime make -C /home/User/vortex_ours1/build/sim/rtlsim /home/User/vortex_ours1/build/sw/runtime/librtlsim.so
+make[2]: Entering directory '/home/User/vortex_ours1/build/sim/rtlsim'
+make[2]: Leaving directory '/home/User/vortex_ours1/build/sim/rtlsim'
+make[1]: Leaving directory '/home/User/vortex_ours1/build/sw/runtime/rtlsim'
+LD_LIBRARY_PATH=/home/User/vortex_ours1/build/sw/runtime: VORTEX_DRIVER=rtlsim ./cta_cluster 
+CONFIGS: num_threads=4, num_warps=4, num_cores=2, num_clusters=2, socket_size=1, local_mem_base=0xfffc0000, num_barriers=8
+cta_cluster — broadcast SAXPY: out[i] = scale[i/K] * x[i] + y[i]
+  scale stream bandwidth:
+    without cluster_dim : 16 loads (each CTA fetches its own copy)
+    with    cluster_dim : 4 loads (rank-0 fetches, multicasts to K-1 peers)
+    saving              : 3x on scale[]
+launch 0: N elements = 64, K (cluster) = 4, clusters = 4, lmem/CTA = 64 bytes
+PASSED
+make: Leaving directory '/home/User/vortex_ours1/build/tests/regression/cta_cluster'

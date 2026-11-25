@@ -1,0 +1,4 @@
+copy_rtl	rc=0	passed=1	cycles=6541
+mcast_simx	rc=0	passed=1	cycles=73319
+mcast_rtl	rc=0	passed=1	cycles=78949
+X64 DONE

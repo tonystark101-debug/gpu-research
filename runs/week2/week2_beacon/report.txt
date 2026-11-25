@@ -1,0 +1,388 @@
+{
+  "tool": "beacon",
+  "env": {
+    "circt": "CIRCT 892a65a01",
+    "foldsim": "foldsim d8350bc0f",
+    "device": "xcu55c-fsvh2892-2L-e",
+    "xlen": 32
+  },
+  "tolerance": 0.0,
+  "metric_thresholds": {
+    "fmax_mhz": 0.02,
+    "lut": 0.05,
+    "ff": 0.05,
+    "lutram": 0.05,
+    "bram": 0.05,
+    "uram": 0.05,
+    "dsp": 0.05
+  },
+  "gated": [
+    "max_levels",
+    "lut",
+    "ff",
+    "lutram",
+    "bram",
+    "uram",
+    "dsp"
+  ],
+  "against": "d6e0c68bd846d1bb7f79bd3139fdf44e7473cb82",
+  "builds": [
+    {
+      "id": "dxa",
+      "group": "dxa",
+      "dut": "dxa",
+      "clock_mhz": 300,
+      "configs": "-DVX_CFG_NUM_THREADS=16 -DVX_CFG_NUM_WARPS=16 -DVX_CFG_DXA_SCATTER_COALESCE",
+      "config_hash": "244996632ca5aa83",
+      "thresholds": {},
+      "known_issue": "",
+      "metrics": {
+        "max_levels": 30,
+        "deep_endpoints": 3897,
+        "watch_endpoints": 6043,
+        "endpoints": 11408,
+        "lut": 12670,
+        "ff": 9328,
+        "lutram": 568,
+        "bram": 0.0,
+        "uram": 0,
+        "dsp": 9,
+        "build_time_s": 50,
+        "units": {
+          "dxa_core/desc_table/desc_store": 8,
+          "dxa_core/g_workers_*_worker/addr_gen": 15,
+          "dxa_core/g_workers_*_worker/gmem_req": 21,
+          "dxa_core/g_workers_*_worker/setup": 23,
+          "dxa_core/g_workers_*_worker/smem_wr": 30,
+          "dxa_core/lmem_arb/req_arb/g_passthru_g_out_buf_*_out_buf/g_eb2_stream_buffer": 28
+        },
+        "interfaces": {},
+        "deepest_paths": [
+          "30  dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r[0] -> dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d[8]",
+          "30  dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r[0] -> dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d[9]",
+          "30  dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r[0] -> dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d[10]",
+          "30  dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r[0] -> dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d[11]",
+          "30  dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r[0] -> dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d[12]",
+          "30  dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r[0] -> dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d[13]",
+          "30  dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r[0] -> dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d[14]",
+          "29  dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r[0] -> dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d[3]",
+          "29  dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r[0] -> dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d[4]",
+          "29  dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r[0] -> dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d[5]"
+        ],
+        "fix_levels": 12,
+        "watch_levels": 8,
+        "pred_fmax_mhz": 274.3,
+        "risk_endpoints": 9,
+        "tied_bits": 1,
+        "tied_ports": [
+          {
+            "port": "dxa_core.smem_bus_if_0_rsp_valid",
+            "bits": 1,
+            "width": 1
+          }
+        ]
+      },
+      "baseline": {},
+      "baseline_config_hash": "0eaf10f31ff7d9ff",
+      "error": null,
+      "verdict": "NO-BASELINE",
+      "reasons": [
+        "no recorded baseline (run --update-baseline)",
+        "against d6e0c68bd846: dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d: 8 -> 30 levels -- DEEPER than the reference",
+        "against d6e0c68bd846: dxa_core/lmem_arb/req_arb/g_passthru.g_out_buf_0.out_buf/g_eb2.stream_buffer/g_buffer.buffer_r.d: 6 -> 28 levels -- DEEPER than the reference",
+        "against d6e0c68bd846: dxa_core/lmem_arb/req_arb/g_passthru.g_out_buf_0.out_buf/g_eb2.stream_buffer/g_buffer.data_out_r.d: 6 -> 28 levels -- DEEPER than the reference",
+        "against d6e0c68bd846: dxa_core/g_workers_0.worker/smem_wr/fb_level_r.d: 10 -> 25 levels -- DEEPER than the reference",
+        "against d6e0c68bd846: dxa_core/g_workers_0.worker/smem_wr/fb_data_r.d: 9 -> 24 levels -- DEEPER than the reference",
+        "against d6e0c68bd846: dxa_core/g_workers_0.worker/smem_wr/fb_n_wrap_r.d: 8 -> 23 levels -- DEEPER than the reference",
+        "against d6e0c68bd846: dxa_core/g_workers_0.worker/setup/setup_state_r.d: 9 -> 23 levels -- DEEPER than the reference",
+        "against d6e0c68bd846: dxa_core/g_workers_0.worker/smem_wr/defer_valid_r.d: 7 -> 22 levels -- DEEPER than the reference",
+        "against d6e0c68bd846: dxa_core/g_workers_0.worker/smem_wr/fb_active_r.d: 7 -> 22 levels -- DEEPER than the reference",
+        "against d6e0c68bd846: dxa_core/g_workers_0.worker/smem_wr/fb_word_addr_r.d: 7 -> 22 levels -- DEEPER than the reference",
+        "against d6e0c68bd846: ... and 33 more",
+        "against d6e0c68bd846: see /home/User/beacon_build/hw/syn/xilinx/dut/logic_gate_dxa_dxa/beacon_diff.txt"
+      ],
+      "xlen": 32,
+      "against": {
+        "reference": "d6e0c68bd846",
+        "rev": "d6e0c68bd846d1bb7f79bd3139fdf44e7473cb82",
+        "regressions": [
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d",
+            "before": 8,
+            "after": 30
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/lmem_arb/req_arb/g_passthru.g_out_buf_0.out_buf/g_eb2.stream_buffer/g_buffer.buffer_r.d",
+            "before": 6,
+            "after": 28
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/lmem_arb/req_arb/g_passthru.g_out_buf_0.out_buf/g_eb2.stream_buffer/g_buffer.data_out_r.d",
+            "before": 6,
+            "after": 28
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/smem_wr/fb_level_r.d",
+            "before": 10,
+            "after": 25
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/smem_wr/fb_data_r.d",
+            "before": 9,
+            "after": 24
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/smem_wr/fb_n_wrap_r.d",
+            "before": 8,
+            "after": 23
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/setup_state_r.d",
+            "before": 9,
+            "after": 23
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/smem_wr/defer_valid_r.d",
+            "before": 7,
+            "after": 22
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/smem_wr/fb_active_r.d",
+            "before": 7,
+            "after": 22
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/smem_wr/fb_word_addr_r.d",
+            "before": 7,
+            "after": 22
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/smem_wr/fb_byte_offset_r.d",
+            "before": 7,
+            "after": 22
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/smem_wr/fb_start_word_r.d",
+            "before": 7,
+            "after": 22
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/smem_wr/km_rd_off_r.d",
+            "before": 7,
+            "after": 22
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/smem_wr/fb_n_in_r.d",
+            "before": 7,
+            "after": 22
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/smem_wr/fb_tag_r.d",
+            "before": 7,
+            "after": 22
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/smem_wr/fb_last_r.d",
+            "before": 7,
+            "after": 22
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/pipeline_start_r.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/state_r.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_uuid.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_bar_addr.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_notify_smem_done.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_dest_kmajor.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_per_lane_stride_bytes.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_elem_bytes.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_dest_mode.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_lg_ratio.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_lg_tcN.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_lg_nsteps.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_lg_bkK.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_is_multicast.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_cta_mask.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_smem_stride.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_initial_gmem_base.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_initial_smem_base.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_row_len_bytes.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_delta.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_dim_tiles.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_oob_limit.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/setup/r_cfill.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/smem_wr/pend_valid_r.d",
+            "before": 6,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/gmem_req/busy_r.d",
+            "before": 8,
+            "after": 21
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/gmem_req/outstanding_count_r.d",
+            "before": 8,
+            "after": 20
+          },
+          {
+            "kind": "area",
+            "name": "lut",
+            "before": 10686.0,
+            "after": 12670.0
+          }
+        ],
+        "diff": "/home/User/beacon_build/hw/syn/xilinx/dut/logic_gate_dxa_dxa/beacon_diff.txt",
+        "verdict": "DEEPER",
+        "reasons": [
+          "dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d: 8 -> 30 levels -- DEEPER than the reference",
+          "dxa_core/lmem_arb/req_arb/g_passthru.g_out_buf_0.out_buf/g_eb2.stream_buffer/g_buffer.buffer_r.d: 6 -> 28 levels -- DEEPER than the reference",
+          "dxa_core/lmem_arb/req_arb/g_passthru.g_out_buf_0.out_buf/g_eb2.stream_buffer/g_buffer.data_out_r.d: 6 -> 28 levels -- DEEPER than the reference",
+          "dxa_core/g_workers_0.worker/smem_wr/fb_level_r.d: 10 -> 25 levels -- DEEPER than the reference",
+          "dxa_core/g_workers_0.worker/smem_wr/fb_data_r.d: 9 -> 24 levels -- DEEPER than the reference",
+          "dxa_core/g_workers_0.worker/smem_wr/fb_n_wrap_r.d: 8 -> 23 levels -- DEEPER than the reference",
+          "dxa_core/g_workers_0.worker/setup/setup_state_r.d: 9 -> 23 levels -- DEEPER than the reference",
+          "dxa_core/g_workers_0.worker/smem_wr/defer_valid_r.d: 7 -> 22 levels -- DEEPER than the reference",
+          "dxa_core/g_workers_0.worker/smem_wr/fb_active_r.d: 7 -> 22 levels -- DEEPER than the reference",
+          "dxa_core/g_workers_0.worker/smem_wr/fb_word_addr_r.d: 7 -> 22 levels -- DEEPER than the reference",
+          "... and 33 more",
+          "see /home/User/beacon_build/hw/syn/xilinx/dut/logic_gate_dxa_dxa/beacon_diff.txt"
+        ],
+        "headline": "deepest path 15 -> 30 levels; mean of the 50 deepest 9.4 -> 20.7; registers at or above 8 levels 40 -> 75; lut 10686 -> 12670, bram 0 -> 0, dsp 9 -> 9"
+      }
+    }
+  ]
+}

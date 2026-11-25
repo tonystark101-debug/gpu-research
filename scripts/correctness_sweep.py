@@ -19,7 +19,7 @@ cases = []
 categories = os.environ.get("SWEEP_CATEGORIES", "dxa.yaml tensor_wg.yaml tensor.yaml").split()
 for f in categories:
     for c in tc.load_category(os.path.join(tree, "ci", "testcases", f)):
-        if c.driver == "simx" and c.via == "blackbox" and c.applies_to_xlen(32) and not c.check:
+        if c.driver == os.environ.get("SWEEP_DRIVER", "simx") and c.via == "blackbox" and c.applies_to_xlen(32) and not c.check:
             cases.append(c)
 mine = [c for i, c in enumerate(cases) if i % nshards == shard]
 

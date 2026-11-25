@@ -1,0 +1,33 @@
+deepest path 15 -> 15 levels; mean of the 50 deepest 9.4 -> 10.0; registers at or above 8 levels 40 -> 45; lut 10686 -> 12668, bram 0 -> 0, dsp 9 -> 9
+
+REGRESSION: 4 or more levels deeper, or now at 12 (3)
+   6 -> 14   dxa_core/lmem_arb/req_arb/g_passthru.g_out_buf_0.out_buf/g_eb2.stream_buffer/g_buffer.data_out_r.d
+             from dxa_core/g_workers_0.worker/smem_wr/co_cap_first_r[0]
+   6 -> 13   dxa_core/lmem_arb/req_arb/g_passthru.g_out_buf_0.out_buf/g_eb2.stream_buffer/g_buffer.buffer_r.d
+             from dxa_core/g_workers_0.worker/smem_wr/co_cap_first_r[0]
+   8 -> 13   dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d
+             from dxa_core/g_workers_0.worker/smem_wr/co_cap_first_r[0]
+
+deeper by less (watch) (1)
+   7 -> 10   dxa_core/g_workers_0.worker/smem_wr/km_rd_off_r.d
+             from dxa_core/g_workers_0.worker/smem_wr/co_cap_first_r[0]
+
+new at or above the watch (2)
+          14 dxa_core/g_workers_0.worker/smem_wr/co_cap_first_r.d
+             from dxa_core/g_workers_0.worker/smem_wr/elem_bytes_q[0]
+          10 dxa_core/g_workers_0.worker/smem_wr/co_inc_const_q.d
+             from dxa_core/g_workers_0.worker/smem_wr/lg_bkK_q[0]
+
+units whose deepest register moved (1)
+   6 -> 14   dxa_core/lmem_arb/req_arb/g_passthru_g_out_buf_*_out_buf/g_eb2_stream_buffer
+
+area (design)
+  lut          10686 -> 12668       +18.5%  REGRESSION
+  ff            9328 -> 9364         +0.4%
+  lutram         568 -> 568          +0.0%
+  bram             0 -> 0            +0.0%
+  uram             0 -> 0            +0.0%
+  dsp              9 -> 9            +0.0%
+
+units whose own area moved (1), all copies
+  dxa_core/g_workers_*_worker/smem_wr: lut 6146 -> 8129, ff 3629 -> 3665

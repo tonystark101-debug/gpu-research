@@ -1,0 +1,148 @@
+{
+  "tool": "beacon",
+  "env": {
+    "circt": "CIRCT 892a65a01",
+    "foldsim": "foldsim d8350bc0f",
+    "device": "xcu55c-fsvh2892-2L-e",
+    "xlen": 32
+  },
+  "tolerance": 0.0,
+  "metric_thresholds": {
+    "fmax_mhz": 0.02,
+    "lut": 0.05,
+    "ff": 0.05,
+    "lutram": 0.05,
+    "bram": 0.05,
+    "uram": 0.05,
+    "dsp": 0.05
+  },
+  "gated": [
+    "max_levels",
+    "lut",
+    "ff",
+    "lutram",
+    "bram",
+    "uram",
+    "dsp"
+  ],
+  "against": "d6e0c68bd846d1bb7f79bd3139fdf44e7473cb82",
+  "builds": [
+    {
+      "id": "dxa",
+      "group": "dxa",
+      "dut": "dxa",
+      "clock_mhz": 300,
+      "configs": "-DVX_CFG_NUM_THREADS=16 -DVX_CFG_NUM_WARPS=16 -DVX_CFG_DXA_SCATTER_COALESCE",
+      "config_hash": "244996632ca5aa83",
+      "thresholds": {},
+      "known_issue": "",
+      "metrics": {
+        "max_levels": 15,
+        "deep_endpoints": 2212,
+        "watch_endpoints": 5442,
+        "endpoints": 11444,
+        "lut": 12668,
+        "ff": 9364,
+        "lutram": 568,
+        "bram": 0.0,
+        "uram": 0,
+        "dsp": 9,
+        "build_time_s": 70,
+        "units": {
+          "dxa_core/desc_table/desc_store": 8,
+          "dxa_core/g_workers_*_worker/addr_gen": 15,
+          "dxa_core/g_workers_*_worker/gmem_req": 9,
+          "dxa_core/g_workers_*_worker/setup": 12,
+          "dxa_core/g_workers_*_worker/smem_wr": 15,
+          "dxa_core/lmem_arb/req_arb/g_passthru_g_out_buf_*_out_buf/g_eb2_stream_buffer": 14
+        },
+        "interfaces": {},
+        "deepest_paths": [
+          "15  dxa_core/g_workers_0.worker/addr_gen/gmem_cursor_r[0] -> dxa_core/g_workers_0.worker/addr_gen/smem_byte_addr_r.d[8]",
+          "15  dxa_core/g_workers_0.worker/addr_gen/gmem_cursor_r[0] -> dxa_core/g_workers_0.worker/addr_gen/smem_byte_addr_r.d[9]",
+          "15  dxa_core/g_workers_0.worker/addr_gen/gmem_cursor_r[0] -> dxa_core/g_workers_0.worker/addr_gen/smem_byte_addr_r.d[10]",
+          "15  dxa_core/g_workers_0.worker/addr_gen/gmem_cursor_r[0] -> dxa_core/g_workers_0.worker/addr_gen/smem_byte_addr_r.d[11]",
+          "15  dxa_core/g_workers_0.worker/addr_gen/gmem_cursor_r[0] -> dxa_core/g_workers_0.worker/addr_gen/smem_byte_addr_r.d[12]",
+          "15  dxa_core/g_workers_0.worker/addr_gen/gmem_cursor_r[0] -> dxa_core/g_workers_0.worker/addr_gen/smem_byte_addr_r.d[13]",
+          "15  dxa_core/g_workers_0.worker/addr_gen/gmem_cursor_r[0] -> dxa_core/g_workers_0.worker/addr_gen/smem_byte_addr_r.d[14]",
+          "15  dxa_core/g_workers_0.worker/gmem_req/oob_pending_r[0] -> dxa_core/g_workers_0.worker/smem_wr/pend_data_r.d[64]",
+          "15  dxa_core/g_workers_0.worker/gmem_req/oob_pending_r[0] -> dxa_core/g_workers_0.worker/smem_wr/pend_data_r.d[65]",
+          "15  dxa_core/g_workers_0.worker/gmem_req/oob_pending_r[0] -> dxa_core/g_workers_0.worker/smem_wr/pend_data_r.d[66]"
+        ],
+        "fix_levels": 12,
+        "watch_levels": 8,
+        "pred_fmax_mhz": 282.3,
+        "risk_endpoints": 2,
+        "tied_bits": 1,
+        "tied_ports": [
+          {
+            "port": "dxa_core.smem_bus_if_0_rsp_valid",
+            "bits": 1,
+            "width": 1
+          }
+        ]
+      },
+      "baseline": {},
+      "baseline_config_hash": "0eaf10f31ff7d9ff",
+      "error": null,
+      "verdict": "NO-BASELINE",
+      "reasons": [
+        "no recorded baseline (run --update-baseline)",
+        "against d6e0c68bd846: dxa_core/lmem_arb/req_arb/g_passthru.g_out_buf_0.out_buf/g_eb2.stream_buffer/g_buffer.data_out_r.d: 6 -> 14 levels -- DEEPER than the reference",
+        "against d6e0c68bd846: dxa_core/lmem_arb/req_arb/g_passthru.g_out_buf_0.out_buf/g_eb2.stream_buffer/g_buffer.buffer_r.d: 6 -> 13 levels -- DEEPER than the reference",
+        "against d6e0c68bd846: dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d: 8 -> 13 levels -- DEEPER than the reference",
+        "against d6e0c68bd846: dxa_core/g_workers_0.worker/smem_wr/co_cap_first_r.d: new at 14 levels (fix threshold 12) -- DEEPER than the reference",
+        "against d6e0c68bd846: lut: 10686 -> 12668 (+18.5%) -- AREA grown past the tolerance against the reference",
+        "against d6e0c68bd846: see /home/User/beacon_build/hw/syn/xilinx/dut/logic_gate_dxa_dxa/beacon_diff.txt"
+      ],
+      "xlen": 32,
+      "against": {
+        "reference": "d6e0c68bd846",
+        "rev": "d6e0c68bd846d1bb7f79bd3139fdf44e7473cb82",
+        "regressions": [
+          {
+            "kind": "deeper",
+            "name": "dxa_core/lmem_arb/req_arb/g_passthru.g_out_buf_0.out_buf/g_eb2.stream_buffer/g_buffer.data_out_r.d",
+            "before": 6,
+            "after": 14
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/lmem_arb/req_arb/g_passthru.g_out_buf_0.out_buf/g_eb2.stream_buffer/g_buffer.buffer_r.d",
+            "before": 6,
+            "after": 13
+          },
+          {
+            "kind": "deeper",
+            "name": "dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d",
+            "before": 8,
+            "after": 13
+          },
+          {
+            "kind": "new",
+            "name": "dxa_core/g_workers_0.worker/smem_wr/co_cap_first_r.d",
+            "before": null,
+            "after": 14
+          },
+          {
+            "kind": "area",
+            "name": "lut",
+            "before": 10686.0,
+            "after": 12668.0
+          }
+        ],
+        "diff": "/home/User/beacon_build/hw/syn/xilinx/dut/logic_gate_dxa_dxa/beacon_diff.txt",
+        "verdict": "DEEPER",
+        "reasons": [
+          "dxa_core/lmem_arb/req_arb/g_passthru.g_out_buf_0.out_buf/g_eb2.stream_buffer/g_buffer.data_out_r.d: 6 -> 14 levels -- DEEPER than the reference",
+          "dxa_core/lmem_arb/req_arb/g_passthru.g_out_buf_0.out_buf/g_eb2.stream_buffer/g_buffer.buffer_r.d: 6 -> 13 levels -- DEEPER than the reference",
+          "dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d: 8 -> 13 levels -- DEEPER than the reference",
+          "dxa_core/g_workers_0.worker/smem_wr/co_cap_first_r.d: new at 14 levels (fix threshold 12) -- DEEPER than the reference",
+          "lut: 10686 -> 12668 (+18.5%) -- AREA grown past the tolerance against the reference",
+          "see /home/User/beacon_build/hw/syn/xilinx/dut/logic_gate_dxa_dxa/beacon_diff.txt"
+        ],
+        "headline": "deepest path 15 -> 15 levels; mean of the 50 deepest 9.4 -> 10.0; registers at or above 8 levels 40 -> 45; lut 10686 -> 12668, bram 0 -> 0, dsp 9 -> 9"
+      }
+    }
+  ]
+}

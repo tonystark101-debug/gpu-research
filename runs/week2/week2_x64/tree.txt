@@ -1,0 +1,5 @@
+ M VX_config.toml
+ M ci/testcases/dxa.yaml
+ M hw/rtl/dxa/VX_dxa_smem_wr.sv
+ M sim/simx/dxa/dxa_core.cpp
+ ? third_party/cocogfx

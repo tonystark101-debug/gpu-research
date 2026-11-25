@@ -1,0 +1,15 @@
+id	status	seconds
+dxa:dxa_copy-7:rtlsim	PASS	39
+dxa:dxa_copy-10:rtlsim	PASS	27
+dxa:dxa_copy_mcast-4:rtlsim	PASS	45
+dxa:cta_cluster-1:rtlsim	PASS	55
+dxa:cta_cluster-relaunch:rtlsim	FAIL	33
+dxa:sgemm2_dxa_mcast-wide:rtlsim	PASS	32
+dxa:sgemm_tcu_wg_dxa_mcast-2:rtlsim	PASS	177
+dxa:sgemm_tcu_wg_dxa_mcast-mc:rtlsim	PASS	338
+dxa:sgemm2_dxa-6:rtlsim	PASS	40
+dxa:sgemm2_dxa-npot-2:rtlsim	PASS	178
+dxa:sgemm_tcu_wg_dxa-fedp2k:rtlsim	PASS	363
+dxa:dxa_kmajor_check-2:rtlsim	PASS	11
+dxa:sgemm_tcu_wg_dxa_mcast-coalesce:rtlsim	PASS	68
+SHARD DONE

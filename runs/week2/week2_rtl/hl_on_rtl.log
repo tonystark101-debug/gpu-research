@@ -1,0 +1,43 @@
+CONFIGS=-DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DWGMMA_NRC=16 -DVX_CFG_TCU_TYPE=DPI -DVX_CFG_NUM_ALU_BLOCKS=1 -DVX_CFG_NUM_LSU_BLOCKS=1 -DVX_CFG_NUM_FPU_BLOCKS=1 -DVX_CFG_FETCH_WIDTH=2 -DITYPE=fp16 -DOTYPE=fp32 -DWGMMA_SS -DDXA_DOUBLE_BUFFER -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DPERF_ENABLE
+Running: CONFIGS="-DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DWGMMA_NRC=16 -DVX_CFG_TCU_TYPE=DPI -DVX_CFG_NUM_ALU_BLOCKS=1 -DVX_CFG_NUM_LSU_BLOCKS=1 -DVX_CFG_NUM_FPU_BLOCKS=1 -DVX_CFG_FETCH_WIDTH=2 -DITYPE=fp16 -DOTYPE=fp32 -DWGMMA_SS -DDXA_DOUBLE_BUFFER -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DPERF_ENABLE" make -C "./ci/../tests/regression/sgemm_tcu_wg_dxa" runtime-rtlsim > /dev/null
+Running: OPTS="-m64 -n64 -k128" CONFIGS="-DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DWGMMA_NRC=16 -DVX_CFG_TCU_TYPE=DPI -DVX_CFG_NUM_ALU_BLOCKS=1 -DVX_CFG_NUM_LSU_BLOCKS=1 -DVX_CFG_NUM_FPU_BLOCKS=1 -DVX_CFG_FETCH_WIDTH=2 -DITYPE=fp16 -DOTYPE=fp32 -DWGMMA_SS -DDXA_DOUBLE_BUFFER -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DPERF_ENABLE" make -C "./ci/../tests/regression/sgemm_tcu_wg_dxa" run-rtlsim
+make: Entering directory '/home/User/vortex_perfB/build/tests/regression/sgemm_tcu_wg_dxa'
+CONFIGS="-DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DWGMMA_NRC=16 -DVX_CFG_TCU_TYPE=DPI -DVX_CFG_NUM_ALU_BLOCKS=1 -DVX_CFG_NUM_LSU_BLOCKS=1 -DVX_CFG_NUM_FPU_BLOCKS=1 -DVX_CFG_FETCH_WIDTH=2 -DITYPE=fp16 -DOTYPE=fp32 -DWGMMA_SS -DDXA_DOUBLE_BUFFER -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DPERF_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE"     make -C /home/User/vortex_perfB/build/sw/runtime/stub DESTDIR=/home/User/vortex_perfB/build/sw/runtime
+make[1]: Entering directory '/home/User/vortex_perfB/build/sw/runtime/stub'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/home/User/vortex_perfB/build/sw/runtime/stub'
+CONFIGS="-DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DWGMMA_NRC=16 -DVX_CFG_TCU_TYPE=DPI -DVX_CFG_NUM_ALU_BLOCKS=1 -DVX_CFG_NUM_LSU_BLOCKS=1 -DVX_CFG_NUM_FPU_BLOCKS=1 -DVX_CFG_FETCH_WIDTH=2 -DITYPE=fp16 -DOTYPE=fp32 -DWGMMA_SS -DDXA_DOUBLE_BUFFER -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DPERF_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE"     make -C /home/User/vortex_perfB/build/sw/runtime/rtlsim DESTDIR=/home/User/vortex_perfB/build/sw/runtime
+make[1]: Entering directory '/home/User/vortex_perfB/build/sw/runtime/rtlsim'
+DESTDIR=/home/User/vortex_perfB/build/sw/runtime make -C /home/User/vortex_perfB/build/sim/rtlsim /home/User/vortex_perfB/build/sw/runtime/librtlsim.so
+make[2]: Entering directory '/home/User/vortex_perfB/build/sim/rtlsim'
+make[2]: Leaving directory '/home/User/vortex_perfB/build/sim/rtlsim'
+make[1]: Leaving directory '/home/User/vortex_perfB/build/sw/runtime/rtlsim'
+LD_LIBRARY_PATH=/home/User/vortex_perfB/build/sw/runtime: VORTEX_DRIVER=rtlsim ./sgemm_tcu_wg_dxa -m64 -n64 -k128
+open device connection
+CONFIGS: num_threads=32, num_warps=8, num_cores=1, num_clusters=1, socket_size=1, local_mem_base=0xfffc0000, num_barriers=8
+input type: fp16, output type: fp32
+WGMMA tile: M=16, N=32, K=16
+CTA tile: M=64 (warps=4)
+grid: 2x1
+block: 128x1
+matrix A: 64x128
+matrix B: 128x64
+smem: 6144 bytes
+allocate device memory
+A_addr=0x30000
+B_addr=0x34000
+C_addr=0x38000
+upload source data
+load kernel module
+start device
+download result
+wait for completion
+Elapsed time: 1691 ms
+verify result
+reference drift: max=3 ULP, bound=25 ULP (K=128)
+PERF: core0: dxa: transfers=32, gmem_reads=1280, gmem_dedup=0 (rate=0%), lmem_writes=2048, avg_gmem_lat=168.7, noslot_stalls=3148
+PERF: dxa: transfers=32, gmem_reads=1280, gmem_dedup=0 (rate=0%), lmem_writes=2048, avg_gmem_lat=168.7, noslot_stalls=3148
+PERF: instrs=4214, cycles=8054, IPC=0.523
+PASSED!
+make: Leaving directory '/home/User/vortex_perfB/build/tests/regression/sgemm_tcu_wg_dxa'
+RC=0

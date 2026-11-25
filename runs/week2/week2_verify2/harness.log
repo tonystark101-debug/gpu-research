@@ -1,0 +1,16 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.18, pytest-8.4.2, pluggy-1.6.0 -- /home/User/ttenv/bin/python
+rootdir: /home/User/vortex_perfB/build
+plugins: xdist-3.8.0, anyio-4.16.0
+collecting ... collected 1114 items / 1107 deselected / 7 selected
+
+ci/test_runner.py::test_case[dxa:sgemm_tcu_wg_dxa-coalesce:simx] PASSED  [ 14%]
+ci/test_runner.py::test_case[dxa:sgemm_tcu_wg_dxa-coalesce:rtlsim] PASSED [ 28%]
+ci/test_runner.py::test_case[dxa:model_parity-sgemm-tcu-wg-dxa-coalesce:rtlsim] PASSED [ 42%]
+ci/test_runner.py::test_case[dxa:sgemm_tcu_wg_sp_dxa-coalesce:simx] PASSED [ 57%]
+ci/test_runner.py::test_case[dxa:sgemm_tcu_wg_sp_dxa-coalesce:rtlsim] PASSED [ 71%]
+ci/test_runner.py::test_case[dxa:sgemm_tcu_wg_dxa_mcast-coalesce:simx] PASSED [ 85%]
+ci/test_runner.py::test_case[dxa:sgemm_tcu_wg_dxa_mcast-coalesce:rtlsim] PASSED [100%]
+
+================ 7 passed, 1107 deselected in 591.85s (0:09:51) ================
+HARNESS_RC=0

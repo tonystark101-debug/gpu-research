@@ -1,0 +1,5 @@
+CONFIGS=-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE
+./ci/blackbox.sh --driver=rtlsim --app=dxa_copy --args=-d1 --debug=3 --perf=6
+CONFIGS=-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE -DPERF_ENABLE
+Running: DEBUG=3 CONFIGS="-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE -DPERF_ENABLE" make -C "./ci/../tests/regression/dxa_copy" runtime-rtlsim > /dev/null
+Running: DEBUG=3 OPTS="-d1" CONFIGS="-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE -DPERF_ENABLE" make -C "./ci/../tests/regression/dxa_copy" run-rtlsim > run.log 2>&1

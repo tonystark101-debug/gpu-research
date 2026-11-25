@@ -2,6 +2,20 @@
 
 We're a small team designing GPU and AI-accelerator hardware in the open. We start by beating the best open-source GPU, then climb from there.
 
+## Week 2 result: the fix is now in Vortex's chip design (Verilog), and the two models agree
+
+- **Measured on the chip design itself.** In rtlsim, which runs Vortex's Verilog, the coalesced copy engine makes `sgemm_tcu_wg_dxa` **1.72× faster**: 13,877 → 8,054 cycles on 64×64×128, same answers.
+- **Simulator and Verilog agree.** SimX and rtlsim agree within 1%, with identical write counts (2,048). Vortex's model-parity check passes.
+- **Correctness, with the option on, on Vortex master:**
+  - 38/38 dxa rtlsim cases pass;
+  - 71/71 dxa + tensor_wg simx cases pass;
+  - 7/7 new official test items pass;
+  - 64-bit builds pass.
+- **Cost when enabled:** +18.5% LUTs in the DXA unit (Beacon), with logic depth unchanged at 15 levels and estimated Fmax −5.5%. It is off by default.
+- **Status:** offered upstream as [vortexgpgpu/vortex#506](https://github.com/vortexgpgpu/vortex/pull/506), now ready for review.
+
+Write-up: [docs/week2-report.md](docs/week2-report.md).
+
 ## Week 1 result: 2× faster than open-source Vortex on its best AI matrix program (in simulation)
 
 [Vortex](https://github.com/vortexgpgpu/vortex) is the leading open-source GPU (Georgia Tech, Apache-2.0). We profiled its fastest matrix-multiply program and made two changes:

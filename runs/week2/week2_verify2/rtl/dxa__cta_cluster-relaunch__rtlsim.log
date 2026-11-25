@@ -1,0 +1,78 @@
+CONFIGS=-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_NUM_WARPS=8 -DVX_CFG_DXA_SCATTER_COALESCE
+./ci/blackbox.sh --driver=rtlsim --app=cta_cluster --args=-l2,1,64 -l4,2,64 -l2,1,8192
+CONFIGS=-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_NUM_WARPS=8 -DVX_CFG_DXA_SCATTER_COALESCE
+Running: CONFIGS="-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_NUM_WARPS=8 -DVX_CFG_DXA_SCATTER_COALESCE" make -C "./ci/../tests/regression/cta_cluster" runtime-rtlsim > /dev/null
+
+g++: internal compiler error: Segmentation fault signal terminated program cc1plus
+Please submit a full bug report,
+with preprocessed source if appropriate.
+See <file:///usr/share/doc/gcc-11/README.Bugs> for instructions.
+make[3]: *** [/home/User/tools/verilator/share/verilator/include/verilated.mk:293: Vrtlsim_shim_VX_kmu_bus_if__0.o] Error 4
+make[3]: *** Waiting for unfinished jobs....
+
+
+
+
+
+
+
+
+
+
+g++: internal compiler error: Segmentation fault signal terminated program cc1plus
+Please submit a full bug report,
+with preprocessed source if appropriate.
+See <file:///usr/share/doc/gcc-11/README.Bugs> for instructions.
+make[3]: *** [/home/User/tools/verilator/share/verilator/include/verilated.mk:293: Vrtlsim_shim.o] Error 4
+g++: internal compiler error: Segmentation fault signal terminated program cc1plus
+Please submit a full bug report,
+with preprocessed source if appropriate.
+See <file:///usr/share/doc/gcc-11/README.Bugs> for instructions.
+make[3]: *** [/home/User/tools/verilator/share/verilator/include/verilated.mk:293: Vrtlsim_shim___024root__0.o] Error 4
+g++: internal compiler error: Segmentation fault signal terminated program cc1plus
+Please submit a full bug report,
+with preprocessed source if appropriate.
+See <file:///usr/share/doc/gcc-11/README.Bugs> for instructions.
+make[3]: *** [/home/User/tools/verilator/share/verilator/include/verilated.mk:293: Vrtlsim_shim___024root__1.o] Error 4
+g++: internal compiler error: Segmentation fault signal terminated program cc1plus
+Please submit a full bug report,
+with preprocessed source if appropriate.
+See <file:///usr/share/doc/gcc-11/README.Bugs> for instructions.
+make[3]: *** [/home/User/tools/verilator/share/verilator/include/verilated.mk:293: Vrtlsim_shim___024root__2.o] Error 4
+g++: internal compiler error: Segmentation fault signal terminated program cc1plus
+Please submit a full bug report,
+with preprocessed source if appropriate.
+See <file:///usr/share/doc/gcc-11/README.Bugs> for instructions.
+make[3]: *** [/home/User/tools/verilator/share/verilator/include/verilated.mk:293: Vrtlsim_shim___024root__3.o] Error 4
+g++: internal compiler error: Segmentation fault signal terminated program cc1plus
+Please submit a full bug report,
+with preprocessed source if appropriate.
+See <file:///usr/share/doc/gcc-11/README.Bugs> for instructions.
+make[3]: *** [/home/User/tools/verilator/share/verilator/include/verilated.mk:293: Vrtlsim_shim___024root__4.o] Error 4
+g++: internal compiler error: Segmentation fault signal terminated program cc1plus
+Please submit a full bug report,
+with preprocessed source if appropriate.
+See <file:///usr/share/doc/gcc-11/README.Bugs> for instructions.
+make[3]: *** [/home/User/tools/verilator/share/verilator/include/verilated.mk:293: Vrtlsim_shim___024root__5.o] Error 4
+g++: internal compiler error: Segmentation fault signal terminated program cc1plus
+Please submit a full bug report,
+with preprocessed source if appropriate.
+See <file:///usr/share/doc/gcc-11/README.Bugs> for instructions.
+make[3]: *** [/home/User/tools/verilator/share/verilator/include/verilated.mk:293: Vrtlsim_shim___024root__6.o] Error 4
+g++: internal compiler error: Segmentation fault signal terminated program cc1plus
+Please submit a full bug report,
+with preprocessed source if appropriate.
+See <file:///usr/share/doc/gcc-11/README.Bugs> for instructions.
+make[3]: *** [/home/User/tools/verilator/share/verilator/include/verilated.mk:293: Vrtlsim_shim___024root__7.o] Error 4
+g++: internal compiler error: Segmentation fault signal terminated program cc1plus
+Please submit a full bug report,
+with preprocessed source if appropriate.
+See <file:///usr/share/doc/gcc-11/README.Bugs> for instructions.
+make[3]: *** [/home/User/tools/verilator/share/verilator/include/verilated.mk:293: Vrtlsim_shim___024unit__0.o] Error 4
+%Error: 'make -C /home/User/vortex_ours2/build/sw/runtime/librtlsim.so.obj_dir -f Vrtlsim_shim.mk -j 16 OPT_FAST=-O2 OPT_GLOBAL=-O2' exited with 2
+        ... See the manual at https://verilator.org/verilator_doc.html?v=5.050 for more assistance.
+%Error: Command Failed ulimit -s unlimited 2>/dev/null; exec /home/User/tools/verilator/bin/verilator_bin --build --exe --language 1800-2012 --assert -Wall -Wpedantic -Wno-DECLFILENAME -Wno-REDEFMACRO --replication-limit 65536 --x-initial unique --x-assign unique verilator.vlt -DVX_CFG_XLEN=32 -DVX_CFG_XLEN_32 -DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_NUM_WARPS=8 -DVX_CFG_DXA_SCATTER_COALESCE -DSIMULATION -DSV_DPI -DVX_CFG_FPU_TYPE_DPI -DVX_CFG_TCU_TYPE_TFR -I/home/User/vortex_ours2/build/sw -I/home/User/vortex_ours2/build/hw -I/home/User/vortex_ours2/sim/rtlsim -I/home/User/vortex_ours2/hw/rtl -I/home/User/vortex_ours2/hw/dpi -I/home/User/vortex_ours2/hw/rtl/libs -I/home/User/vortex_ours2/hw/rtl/interfaces -I/home/User/vortex_ours2/hw/rtl/core -I/home/User/vortex_ours2/hw/rtl/mem -I/home/User/vortex_ours2/hw/rtl/vm -I/home/User/vortex_ours2/hw/rtl/cache -I/home/User/vortex_ours2/hw/rtl/fpu -I/home/User/vortex_ours2/hw/rtl/dxa /home/User/vortex_ours2/hw/rtl/VX_gpu_pkg.sv /home/User/vortex_ours2/hw/rtl/fpu/VX_fpu_pkg.sv /home/User/vortex_ours2/hw/rtl/dxa/VX_dxa_pkg.sv /home/User/vortex_ours2/hw/rtl/VX_trace_pkg.sv --cc rtlsim_shim --top-module rtlsim_shim -j 16 -DNDEBUG -MAKEFLAGS OPT_FAST=-O2 -MAKEFLAGS OPT_GLOBAL=-O2 /home/User/vortex_ours2/sw/common/util.cpp /home/User/vortex_ours2/sim/common/mem.cpp /home/User/vortex_ours2/sw/common/softfloat_ext.cpp /home/User/vortex_ours2/sw/common/rvfloats.cpp /home/User/vortex_ours2/sim/common/dram_sim.cpp /home/User/vortex_ours2/sim/common/elf_loader.cpp /home/User/vortex_ours2/sim/common/host_monitor.cpp /home/User/vortex_ours2/sim/common/cout_drainer.cpp /home/User/vortex_ours2/hw/dpi/dpi_util.cpp /home/User/vortex_ours2/hw/dpi/dpi_float.cpp /home/User/vortex_ours2/sim/rtlsim/processor.cpp -CFLAGS -std=c++17\ -Wall\ -Wextra\ -Wfatal-errors\ -Werror\ -fPIC\ -fno-tree-loop-distribute-patterns\ -I/home/User/vortex_ours2/build/sw\ -I/home/User/vortex_ours2/build/hw\ -I/home/User/vortex_ours2/sim/common\ -I/home/User/vortex_ours2/sw/common\ -I/home/User/vortex_ours2/third_party/softfloat/source/include\ -I/home/User/vortex_ours2/third_party/ramulator/ext/spdlog/include\ -I/home/User/vortex_ours2/third_party/ramulator/ext/yaml-cpp/include\ -I/home/User/vortex_ours2/third_party/ramulator/src\ -DVX_CFG_XLEN=32\ -DVX_CFG_XLEN_32\ -DVX_CFG_EXT_DXA_ENABLE\ -DVX_CFG_NUM_WARPS=8\ -DVX_CFG_DXA_SCATTER_COALESCE\ -DSIMULATION\ -DSV_DPI\ -DNDEBUG -LDFLAGS -shared\ /home/User/vortex_ours2/third_party/softfloat/build/Linux-x86_64-GCC/softfloat.a\ -Wl\,-rpath\,/home/User/vortex_ours2/third_party/ramulator\ \ -L/home/User/vortex_ours2/third_party/ramulator\ -lramulator\ -Wl\,-rpath\,/home/User/vortex_ours2/third_party/ramulator_ext\ -L/home/User/vortex_ours2/third_party/ramulator_ext\ -Wl\,--push-state\,--no-as-needed\ -lramulator-vortex\ -Wl\,--pop-state --MMD --Mdir /home/User/vortex_ours2/build/sw/runtime/librtlsim.so.obj_dir -o /home/User/vortex_ours2/build/sw/runtime/librtlsim.so
+make[2]: *** [Makefile:229: /home/User/vortex_ours2/build/sw/runtime/librtlsim.so] Error 2
+make[1]: *** [Makefile:42: /home/User/vortex_ours2/build/sw/runtime/librtlsim.so] Error 2
+make: *** [../common.mk:241: runtime-rtlsim] Error 2
+Error building driver: rtlsim (via ./ci/../tests/regression/cta_cluster)

@@ -1,0 +1,5 @@
+hl_off_simx	simx	passed=1	cycles=13990	lmem_writes=9216
+hl_on_simx	simx	passed=1	cycles=8137	lmem_writes=2048
+hl_on_rtl	rtlsim	passed=1	cycles=8054	lmem_writes=2048
+hl_off_rtl	rtlsim	passed=1	cycles=13877	lmem_writes=9216
+WEEK2 RTL DONE

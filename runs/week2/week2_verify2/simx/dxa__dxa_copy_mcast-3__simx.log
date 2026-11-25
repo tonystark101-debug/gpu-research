@@ -1,0 +1,25 @@
+CONFIGS=-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_L2_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE
+./ci/blackbox.sh --driver=simx --app=dxa_copy_mcast
+CONFIGS=-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_L2_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE
+Running: CONFIGS="-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_L2_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE" make -C "./ci/../tests/regression/dxa_copy_mcast" runtime-simx > /dev/null
+Running: CONFIGS="-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_L2_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE" make -C "./ci/../tests/regression/dxa_copy_mcast" run-simx
+make: Entering directory '/home/User/vortex_ours2/build/tests/regression/dxa_copy_mcast'
+CONFIGS="-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_L2_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE"     make -C /home/User/vortex_ours2/build/sw/runtime/stub DESTDIR=/home/User/vortex_ours2/build/sw/runtime
+make[1]: Entering directory '/home/User/vortex_ours2/build/sw/runtime/stub'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/home/User/vortex_ours2/build/sw/runtime/stub'
+CONFIGS="-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_L2_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE"     make -C /home/User/vortex_ours2/build/sw/runtime/simx DESTDIR=/home/User/vortex_ours2/build/sw/runtime
+make[1]: Entering directory '/home/User/vortex_ours2/build/sw/runtime/simx'
+DESTDIR=/home/User/vortex_ours2/build/sw/runtime make -C /home/User/vortex_ours2/build/sim/simx /home/User/vortex_ours2/build/sw/runtime/libsimx.so
+make[2]: Entering directory '/home/User/vortex_ours2/build/sim/simx'
+make[2]: Leaving directory '/home/User/vortex_ours2/build/sim/simx'
+make[1]: Leaving directory '/home/User/vortex_ours2/build/sw/runtime/simx'
+LD_LIBRARY_PATH=/home/User/vortex_ours2/build/sw/runtime: VORTEX_DRIVER=simx ./dxa_copy_mcast -r16 -c16 -R16 -C4
+dxa_copy_mcast (intra-core multicast)
+  source: 16 x 16, tile: 16 x 4
+  block=4x1 (single warp), grid=4x1, num_recv=4
+  local_mem=256 bytes
+start
+PERF: instrs=955, cycles=3380, IPC=0.283
+PASSED
+make: Leaving directory '/home/User/vortex_ours2/build/tests/regression/dxa_copy_mcast'

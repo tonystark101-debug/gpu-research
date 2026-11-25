@@ -1,0 +1,9 @@
+co0_inf8	passed=1	cycles=108524	noslot=59229	lmem_writes=73728
+co0_inf16	passed=1	cycles=108129	noslot=20144	lmem_writes=73728
+co0_inf32	passed=1	cycles=108159	noslot=11965	lmem_writes=73728
+co0_inf64	passed=1	cycles=108159	noslot=0	lmem_writes=73728
+co1_inf8	passed=1	cycles=56743	noslot=31563	lmem_writes=16384
+co1_inf16	passed=1	cycles=56164	noslot=19868	lmem_writes=16384
+co1_inf32	passed=1	cycles=55950	noslot=11676	lmem_writes=16384
+co1_inf64	passed=1	cycles=55950	noslot=0	lmem_writes=16384
+INFLIGHT DONE

@@ -1,0 +1,14 @@
+id	status	seconds
+dxa:dxa_copy-8:rtlsim	PASS	47
+dxa:dxa_copy-2c2s:rtlsim	PASS	158
+dxa:dxa_copy_mcast-mc:rtlsim	PASS	94
+dxa:cta_cluster-mc:rtlsim	PASS	2
+dxa:sgemm2_dxa-2:rtlsim	PASS	67
+dxa:sgemm2_dxa_mcast-2:rtlsim	PASS	5
+dxa:sgemm_tcu_wg_dxa_mcast-4:rtlsim	PASS	155
+dxa:sgemm_tcu-2:rtlsim	PASS	31
+dxa:sgemm2_dxa-8:rtlsim	PASS	82
+dxa:sgemm2_dxa-10:rtlsim	PASS	181
+dxa:sgemm_tcu_wg_dxa-lmem128k:rtlsim	PASS	168
+dxa:sgemm_tcu_wg_dxa-coalesce:rtlsim	PASS	193
+SHARD DONE

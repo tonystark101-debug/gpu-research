@@ -1,0 +1,65 @@
+reference: staging HEAD (d6e0c68bd846) in /home/User/vortex_perfB/.beacon_ref/d6e0c68bd846/src
+reference: HEAD (d6e0c68bd846) in /home/User/vortex_perfB/.beacon_ref/d6e0c68bd846/build32_logic_gate
+configuring build tree /home/User/vortex_perfB/.beacon_ref/d6e0c68bd846/build32_logic_gate (xlen=32, tooldir=/home/User/tools)
+schedule (1 builds, 2 parallel, 8 make jobs each):
+  dxa        dut=dxa       300 MHz  ~2m
+  [phase] dxa        sources (0m)
+  [phase] dxa        elaboration (0m)
+  [elab ] dxa        past elaboration -- into synthesis (0m)
+  [phase] dxa        mapping (0m)
+  [phase] dxa        levels (0m)
+  [elab ] dxa        past elaboration -- into synthesis (0m)
+  [phase] dxa        mapping (0m)
+  [phase] dxa        area (0m)
+  [phase] dxa        reporting (0m)
+  [done ] dxa        max 15 levels, 2081 end points >= 12, 10686 LUTs, 0 BRAM, 9 DSP  (0m)
+
+build      dut       max_lv      deep     watch      ends       lut        ff    lutram     bram   uram    dsp   p_fmax   risk   tied   time  verdict
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+dxa        dxa           15      2081      4353     11408     10686      9328       568        0      0      9    298.6      0      1     0m  MEASURED
+
+advisory (not gated):
+  dxa        p_fmax 298.6 MHz is 0.5% below the 300 MHz clock; slowest registers in beacon_risk.txt (advisory, not gated)
+schedule (1 builds, 2 parallel, 8 make jobs each):
+  dxa        dut=dxa       300 MHz  ~2m
+  [phase] dxa        sources (0m)
+  [phase] dxa        elaboration (0m)
+  [elab ] dxa        past elaboration -- into synthesis (0m)
+  [phase] dxa        mapping (0m)
+  [phase] dxa        levels (0m)
+  [elab ] dxa        past elaboration -- into synthesis (0m)
+  [phase] dxa        mapping (0m)
+  [phase] dxa        area (0m)
+  [phase] dxa        reporting (0m)
+  [done ] dxa        max 30 levels, 3897 end points >= 12, 12670 LUTs, 0 BRAM, 9 DSP  (0m)
+
+build      dut       max_lv      deep     watch      ends       lut        ff    lutram     bram   uram    dsp   p_fmax   risk   tied   time  verdict
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+dxa        dxa           30      3897      6043     11408     12670      9328       568        0      0      9    274.3      9      1     0m  NO-BASELINE
+
+dxa: NO-BASELINE
+  - no recorded baseline (run --update-baseline)
+
+advisory (not gated):
+  dxa        p_fmax 274.3 MHz is 8.6% below the 300 MHz clock; slowest registers in beacon_risk.txt (advisory, not gated)
+
+against d6e0c68bd846 (/home/User/vortex_perfB/.beacon_ref/d6e0c68bd846/build32_logic_gate):
+  dxa        DEEPER       deepest path 15 -> 30 levels; mean of the 50 deepest 9.4 -> 20.7; registers at or above 8 levels 40 -> 75; lut 10686 -> 12670, bram 0 -> 0, dsp 9 -> 9
+
+dxa against d6e0c68bd846: DEEPER
+  - dxa_core/g_workers_0.worker/smem_wr/fb_byte_addr_r.d: 8 -> 30 levels -- DEEPER than the reference
+  - dxa_core/lmem_arb/req_arb/g_passthru.g_out_buf_0.out_buf/g_eb2.stream_buffer/g_buffer.buffer_r.d: 6 -> 28 levels -- DEEPER than the reference
+  - dxa_core/lmem_arb/req_arb/g_passthru.g_out_buf_0.out_buf/g_eb2.stream_buffer/g_buffer.data_out_r.d: 6 -> 28 levels -- DEEPER than the reference
+  - dxa_core/g_workers_0.worker/smem_wr/fb_level_r.d: 10 -> 25 levels -- DEEPER than the reference
+  - dxa_core/g_workers_0.worker/smem_wr/fb_data_r.d: 9 -> 24 levels -- DEEPER than the reference
+  - dxa_core/g_workers_0.worker/smem_wr/fb_n_wrap_r.d: 8 -> 23 levels -- DEEPER than the reference
+  - dxa_core/g_workers_0.worker/setup/setup_state_r.d: 9 -> 23 levels -- DEEPER than the reference
+  - dxa_core/g_workers_0.worker/smem_wr/defer_valid_r.d: 7 -> 22 levels -- DEEPER than the reference
+  - dxa_core/g_workers_0.worker/smem_wr/fb_active_r.d: 7 -> 22 levels -- DEEPER than the reference
+  - dxa_core/g_workers_0.worker/smem_wr/fb_word_addr_r.d: 7 -> 22 levels -- DEEPER than the reference
+  - ... and 33 more
+  - see /home/User/beacon_build/hw/syn/xilinx/dut/logic_gate_dxa_dxa/beacon_diff.txt
+
+wrote /home/User/runs/week2_beacon/report.txt
+
+logic_gate: 1 builds, 1 NO-BASELINE -- FAILED

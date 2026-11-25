@@ -1,0 +1,423 @@
+From e0f50599359995f82b105a7182c86e734ea401f5 Mon Sep 17 00:00:00 2001
+From: tonystark101-debug
+ <61789569+tonystark101-debug@users.noreply.github.com>
+Date: Wed, 25 Nov 2026 19:14:59 +0530
+Subject: [PATCH 1/2] simx/dxa: write every scatter element that shares an LMEM
+ block in one beat
+
+The SMEM writer drains a K-major / Flat / BlockMajor scatter one element
+per beat, so a 64-byte line of fp16 B becomes 32 LMEM writes even though a
+beat can write a whole LMEM row (one 64-byte block per DMA channel) with
+byte enables. On sgemm_tcu_wg_dxa (DXA double buffer, fp16 WGMMA, NT=32,
+NRC=16, 128x128x256) the writer is the bottleneck: 73,728 LMEM writes, all
+8 read slots full for 59,229 of 108,524 cycles, tensor unit busy 3.8%.
+
+Under VX_CFG_DXA_SCATTER_COALESCE a beat gathers every element of the
+line that lands in the same 64-byte block into one byte-masked write, then
+continues with the line's next block run on the other free channel of the
+same row. Off by default: this is SimX-only for now, so it must not move
+cycles against the RTL until VX_dxa_smem_wr.sv gets the same change.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ sim/simx/dxa/dxa_core.cpp | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/sim/simx/dxa/dxa_core.cpp b/sim/simx/dxa/dxa_core.cpp
+index 1e7f62e..3e1efdd 100644
+--- a/sim/simx/dxa/dxa_core.cpp
++++ b/sim/simx/dxa/dxa_core.cpp
+@@ -722,6 +722,10 @@ private:
+ 
+     constexpr uint64_t kRowMask = ~uint64_t(DxaCore::LMEM_ROW_SIZE - 1);
+     uint64_t beat_row = UINT64_MAX;
++  #ifdef VX_CFG_DXA_SCATTER_COALESCE
++    // Each LMEM DMA channel takes one block write per beat.
++    uint32_t used_halves = 0;
++  #endif
+ 
+     for (uint32_t emitted = 0; emitted < DxaCore::LMEM_PORTS_PER_CORE; ++emitted) {
+       slot = w.drain_slot;
+@@ -788,6 +792,12 @@ private:
+       if (lmem_ch.full()) {
+         break; // backpressure
+       }
++    #ifdef VX_CFG_DXA_SCATTER_COALESCE
++      if ((used_halves >> half) & 1u) {
++        break; // this row half's channel already carries a write this beat
++      }
++      used_halves |= (1u << half);
++    #endif
+ 
+       // Build LMEM MemReq with TLM payload.
+       MemReq req;
+@@ -802,7 +812,14 @@ private:
+ 
+       // A contiguous span is one write; a scatter span writes element e0.
+       const bool     beat_scatter = lw.scatter;
++    #ifdef VX_CFG_DXA_SCATTER_COALESCE
++      // Coalesced scatter: one write carries every consecutive element of
++      // the line that lands in this block, under a byte mask (the loop below
++      // stops at the first element outside the block or the beat's row).
++      const uint32_t e_end = num_elems;
++    #else
+       const uint32_t e_end = beat_scatter ? (e0 + 1) : num_elems;
++    #endif
+       uint32_t ee = e0;
+       for (; ee < e_end; ++ee) {
+         uint64_t dest_byte = dest_byte_of(ee);
+@@ -865,9 +882,15 @@ private:
+           w.drain_slot = UINT32_MAX;
+         }
+       }
++    #ifndef VX_CFG_DXA_SCATTER_COALESCE
+       if (beat_scatter) {
+         break; // a scatter beat writes one element
+       }
++    #else
++      // A coalesced scatter beat goes on to the line's next block run if it
++      // lies in the same LMEM row and on a free channel (checked above).
++      (void)beat_scatter;
++    #endif
+     } // per-tick row-beat emission loop
+   }
+ 
+-- 
+2.55.0.windows.3
+
+
+From 0132b4732269f26be3229e8f03202623e4ec1ffb Mon Sep 17 00:00:00 2001
+From: tonystark101-debug
+ <61789569+tonystark101-debug@users.noreply.github.com>
+Date: Wed, 25 Nov 2026 21:42:16 +0530
+Subject: [PATCH 2/2] dxa: coalesce tiled scatter writes in the RTL to match
+ SimX
+
+The DXA SMEM writer drains Flat/BlockMajor scatter one element per beat, so
+a 64-byte line of fp16 B turns into 32 LMEM writes although each beat can
+write a whole SMEM word under byte enables. On sgemm_tcu_wg_dxa that writer
+is the bottleneck (tensor unit busy ~4%).
+
+With VX_CFG_DXA_SCATTER_COALESCE, VX_dxa_smem_wr drains the run of
+consecutive elements that land in the current SMEM word: the window at the
+read pointer is spread to the layout's power-of-two step and shifted to the
+first element's in-word offset, under a byte mask. Runs are regular
+(BlockMajor: after a CL's first beat every beat fills a word; Flat: one
+n-block per beat), so the beat size is min(level, cap) with cap registered
+at CL load, which keeps the drain's control cone at the reference depth.
+
+SimX now follows the RTL's rule: tiled runs end at the SMEM word (Flat also
+at the n-block end), and K-major keeps one element per beat. The option is
+declared in VX_config.toml, off by default. dxa.yaml gains functional
+simx/rtlsim cases for BlockMajor, Flat and multicast, plus a model_parity
+case.
+
+rtlsim, sgemm_tcu_wg_dxa NT32/NW8 fp16 64x64x128: 13877 -> 8054 cycles,
+LMEM writes 9216 -> 2048; SimX 8137 (1.0%). Beacon dxa (flag on vs master):
+depth 15 -> 15, LUT 10686 -> 12668, p_fmax 298.6 -> 282.3 MHz.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ VX_config.toml               |   3 +
+ ci/testcases/dxa.yaml        |  39 +++++++++++++
+ hw/rtl/dxa/VX_dxa_smem_wr.sv | 109 +++++++++++++++++++++++++++++++++++
+ sim/simx/dxa/dxa_core.cpp    |  35 ++++++++---
+ 4 files changed, 178 insertions(+), 8 deletions(-)
+
+diff --git a/VX_config.toml b/VX_config.toml
+index 6e059d3..ab08d49 100644
+--- a/VX_config.toml
++++ b/VX_config.toml
+@@ -432,6 +432,9 @@ VX_CFG_NUM_DXA_CORES = "expr: max(1, up($VX_CFG_NUM_CORES / 8))"
+ VX_CFG_DXA_MEM_PORTS = "expr: min($VX_CFG_NUM_DXA_CORES, up($VX_CFG_NUM_CORES / $VX_CFG_SOCKET_SIZE) * $VX_CFG_L1_MEM_PORTS)"
+ VX_CFG_DXA_QUEUE_SIZE = 16
+ VX_CFG_DXA_MAX_INFLIGHT = 8
++# Tiled (Flat/BlockMajor) scatter writes the run of elements that share an
++# LMEM word in one beat instead of one element per beat.
++VX_CFG_DXA_SCATTER_COALESCE = false
+ 
+ [rtu]
+ # RTU (Ray-Tracing Unit)
+diff --git a/ci/testcases/dxa.yaml b/ci/testcases/dxa.yaml
+index 636c4b0..0d48bb5 100644
+--- a/ci/testcases/dxa.yaml
++++ b/ci/testcases/dxa.yaml
+@@ -531,6 +531,45 @@ tests:
+   app: dxa_kmajor_check
+   configs: -DVX_CFG_EXT_DXA_ENABLE
+ 
++# Coalesced tiled scatter (VX_CFG_DXA_SCATTER_COALESCE): the BlockMajor, Flat
++# and multicast producers drain a run of elements per LMEM word.
++- id: sgemm_tcu_wg_dxa-coalesce
++  via: blackbox
++  drivers:
++  - simx
++  - rtlsim
++  app: sgemm_tcu_wg_dxa
++  configs: -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DWGMMA_NRC=16 -DVX_CFG_TCU_TYPE=DPI -DVX_CFG_NUM_ALU_BLOCKS=1 -DVX_CFG_NUM_LSU_BLOCKS=1 -DVX_CFG_NUM_FPU_BLOCKS=1 -DVX_CFG_FETCH_WIDTH=2 -DVX_CFG_DXA_SCATTER_COALESCE
++  shape:
++    threads: 32
++    warps: 8
++- id: sgemm_tcu_wg_sp_dxa-coalesce
++  via: blackbox
++  drivers:
++  - simx
++  - rtlsim
++  app: sgemm_tcu_wg_sp_dxa
++  configs: -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_TCU_SPARSE_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_TCU_TYPE=DPI -DVX_CFG_FETCH_WIDTH=4
++    -DWGMMA_NRC=32 -DVX_CFG_NUM_ALU_BLOCKS=1 -DVX_CFG_NUM_LSU_BLOCKS=1 -DVX_CFG_NUM_FPU_BLOCKS=1 -DVX_CFG_DXA_SCATTER_COALESCE
++  shape:
++    threads: 32
++    warps: 8
++- id: sgemm_tcu_wg_dxa_mcast-coalesce
++  via: blackbox
++  drivers:
++  - simx
++  - rtlsim
++  app: sgemm_tcu_wg_dxa_mcast
++  configs: -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_TCU_TYPE=DPI -DVX_CFG_DXA_SCATTER_COALESCE
++  args: -m 128 -n 64 -k 32
++- id: model_parity-sgemm-tcu-wg-dxa-coalesce
++  check: model_parity
++  via: blackbox
++  app: sgemm_tcu_wg_dxa
++  configs: -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DWGMMA_NRC=16 -DVX_CFG_TCU_TYPE=DPI -DVX_CFG_NUM_ALU_BLOCKS=1 -DVX_CFG_NUM_LSU_BLOCKS=1 -DVX_CFG_NUM_FPU_BLOCKS=1 -DVX_CFG_FETCH_WIDTH=2 -DVX_CFG_DXA_SCATTER_COALESCE
++  shape:
++    threads: 32
++    warps: 8
+ # SimX<->rtlsim cycle parity on the DXA engine: same config on both drivers,
+ # cycles must agree within tolerance (see core.yaml).
+ - id: model_parity-copy
+diff --git a/hw/rtl/dxa/VX_dxa_smem_wr.sv b/hw/rtl/dxa/VX_dxa_smem_wr.sv
+index c39682b..6e1f665 100644
+--- a/hw/rtl/dxa/VX_dxa_smem_wr.sv
++++ b/hw/rtl/dxa/VX_dxa_smem_wr.sv
+@@ -197,6 +197,21 @@ module VX_dxa_smem_wr import VX_gpu_pkg::*, VX_dxa_pkg::*; #(
+         intra_klo_mask_q <= (16'd1 << (is_flat_w ? lg_ratio_q : lg_bkK_q)) - 16'd1;
+         esize_q          <= esize;
+     end
++`ifdef VX_CFG_DXA_SCATTER_COALESCE
++    // Per-transfer coalescing constants (see the coalesced drain below).
++    reg [3:0]                 co_lg_k_q;      // log2(step / elem_bytes)
++    reg [DXA_SMEM_ADDR_W-1:0] co_inc_const_q; // Flat: wrap - step; BlockMajor: 0
++    reg [FILL_W-1:0]          co_cap_full_q;  // bytes in a beat after a CL's first
++    always @(posedge clk) begin
++        co_lg_k_q      <= is_flat_w ? lg_ratio_q : lg_bkK_q;
++        co_inc_const_q <= is_flat_w ? (DXA_SMEM_ADDR_W'(wrap_elems_w << step_sh_w) - (DXA_SMEM_ADDR_W'(1) << step_sh_w)) : '0;
++        // A whole word: BlockMajor word/bkK bytes (one element per step group,
++        // at least one element); Flat one n-block, tcN elements.
++        co_cap_full_q  <= is_flat_w ? (FILL_W'(tcn_mask_w + 16'd1) << esize)
++                        : ((step_sh_w >= 5'(SMEM_OFF_W)) ? FILL_W'(elem_bytes_q)
++                                                         : FILL_W'(SMEM_WORD_SIZE >> lg_bkK_q));
++    end
++`endif
+ 
+     // ════════════════════════════════════════════════════════════════════
+     // Cfill replication (for OOB CLs)
+@@ -289,7 +304,17 @@ module VX_dxa_smem_wr import VX_gpu_pkg::*, VX_dxa_pkg::*; #(
+     wire has_full_word    = (fb_level_r >= drain_q_bytes);
+     wire has_last_partial = !scatter && !has_full_word && (fb_level_r > 0);
+     wire drain_valid      = fb_active_r && (has_full_word || has_last_partial);
++`ifdef VX_CFG_DXA_SCATTER_COALESCE
++    // A coalesced beat drains min(fb_level_r, cap) bytes; cap is registered
++    // (first beat of a CL vs a full word), so the size test stays shallow.
++    reg               co_first_r;
++    reg  [FILL_W-1:0] co_cap_first_r;
++    wire [FILL_W-1:0] co_cap = co_first_r ? co_cap_first_r : co_cap_full_q;
++    wire co_en = scatter && dest_tiled;
++    wire drain_will_empty = (fb_level_r <= (co_en ? co_cap : drain_q_bytes));
++`else
+     wire drain_will_empty = (fb_level_r <= drain_q_bytes);
++`endif
+ 
+     wire smem_wr_ready_internal;
+     wire drain_fire = drain_valid && smem_wr_ready_internal;
+@@ -316,8 +341,61 @@ module VX_dxa_smem_wr import VX_gpu_pkg::*, VX_dxa_pkg::*; #(
+     wire [SMEM_DATAW-1:0] km_elem_data_shifted =
+         SMEM_DATAW'(km_elem_bytes_slice) << ({3'b000, km_in_word_off} << 3);
+ 
++`ifdef VX_CFG_DXA_SCATTER_COALESCE
++    // Coalesced tiled drain: a beat carries the run of consecutive elements
++    // that land in the current SMEM word. Tiled destinations advance by a
++    // power-of-two step (Flat only within an n-block, whose end also ends the
++    // run), so the run is the window at the read pointer spread to that step
++    // and shifted to the in-word offset of its first element. An element never
++    // straddles a step group (its in-group offset is r_in*elem_bytes), so the
++    // run never straddles the word.
++    localparam CO_WIN_BYTES = (CL_SIZE < SMEM_WORD_SIZE) ? CL_SIZE : SMEM_WORD_SIZE;
++
++    // Runs are regular: BlockMajor puts one element per step group, so after a
++    // CL's first beat every beat fills a whole word (word/step elements);
++    // Flat runs are n-blocks of tcN elements, step-aligned within a word.
++    wire [4:0] co_lg_step = intra_n_sh_q;  // log2(step bytes), per transfer
++    wire [FILL_W-1:0] co_bytes = (fb_level_r < co_cap) ? fb_level_r : co_cap;
++    // Next element's destination: a BlockMajor beat ends at a word boundary
++    // (+bytes*bkK lands on the next word at the same step offset); a Flat beat
++    // ends an n-block (+bytes*ratio, less one step, plus the wrap step).
++    wire [DXA_SMEM_ADDR_W-1:0] co_addr_inc =
++        (DXA_SMEM_ADDR_W'(co_bytes) << co_lg_k_q) + co_inc_const_q;
++
++    // Spread: stage u moves each 2^u-byte block from 2^u*i to 2^(u+1)*i; the
++    // stages from log2(elem_bytes) to log2(step) take element i to step*i.
++    wire [SMEM_OFF_W:0][SMEM_DATAW-1:0]     co_sd;
++    wire [SMEM_OFF_W:0][SMEM_WORD_SIZE-1:0] co_sm;
++    assign co_sd[0] = SMEM_DATAW'(fb_data_r[km_rd_bit +: CO_WIN_BYTES*8]);
++    for (genvar j = 0; j < SMEM_WORD_SIZE; ++j) begin : g_co_mask
++        assign co_sm[0][j] = (FILL_W'(j) < co_bytes);
++    end
++    for (genvar u = 0; u < SMEM_OFF_W; ++u) begin : g_co_spread
++        wire co_stage_en = (5'(u) >= 5'(esize_q)) && (5'(u) < co_lg_step);
++        wire [SMEM_DATAW-1:0]     sd;
++        wire [SMEM_WORD_SIZE-1:0] sm;
++        for (genvar j = 0; j < SMEM_WORD_SIZE; ++j) begin : g_byte
++            localparam integer SRC = ((j >> (u + 1)) << u) + (j & ((1 << (u + 1)) - 1));
++            if ((j & ((1 << (u + 1)) - 1)) < (1 << u)) begin : g_keep
++                assign sd[j*8 +: 8] = co_sd[u][SRC*8 +: 8];
++                assign sm[j]        = co_sm[u][SRC];
++            end else begin : g_gap
++                assign sd[j*8 +: 8] = 8'd0;
++                assign sm[j]        = 1'b0;
++            end
++        end
++        assign co_sd[u+1] = co_stage_en ? sd : co_sd[u];
++        assign co_sm[u+1] = co_stage_en ? sm : co_sm[u];
++    end
++    wire [SMEM_DATAW-1:0]     co_word_data   = co_sd[SMEM_OFF_W] << {km_in_word_off, 3'b000};
++    wire [SMEM_WORD_SIZE-1:0] co_word_byteen = co_sm[SMEM_OFF_W] << km_in_word_off;
++
++    wire [SMEM_DATAW-1:0] fb_word_data = scatter ? (co_en ? co_word_data : km_elem_data_shifted)
++                                                 : fb_data_r[SMEM_DATAW-1:0];
++`else
+     wire [SMEM_DATAW-1:0] fb_word_data = scatter ? km_elem_data_shifted
+                                                  : fb_data_r[SMEM_DATAW-1:0];
++`endif
+ 
+     // K-major byteen: `elem_bytes` contiguous bytes at km_in_word_off.
+     wire [SMEM_WORD_SIZE-1:0] km_elem_mask_raw =
+@@ -334,7 +412,11 @@ module VX_dxa_smem_wr import VX_gpu_pkg::*, VX_dxa_pkg::*; #(
+             assign rm_byteen[i] = byte_has_data;
+         end
+     end
++`ifdef VX_CFG_DXA_SCATTER_COALESCE
++    wire [SMEM_WORD_SIZE-1:0] fb_word_byteen = scatter ? (co_en ? co_word_byteen : km_byteen) : rm_byteen;
++`else
+     wire [SMEM_WORD_SIZE-1:0] fb_word_byteen = scatter ? km_byteen : rm_byteen;
++`endif
+ 
+     // ════════════════════════════════════════════════════════════════════
+     // sw-channel accept + load scheduling
+@@ -402,6 +484,17 @@ module VX_dxa_smem_wr import VX_gpu_pkg::*, VX_dxa_pkg::*; #(
+     wire [15:0]                fb_load_n_in            = use_pend_for_fb ? pend_n_in_r : defer_n_in_r;
+ 
+     wire [SMEM_OFF_W-1:0]      new_smem_byte_off = fb_load_smem_byte_addr[SMEM_OFF_W-1:0];
++`ifdef VX_CFG_DXA_SCATTER_COALESCE
++    // First beat of a CL: BlockMajor runs from the first element's step group
++    // to the end of its word; Flat from its n-block phase to the n-block end.
++    wire [SMEM_OFF_W-1:0] co_load_off   = fb_load_dest_addr[SMEM_OFF_W-1:0];
++    wire [SMEM_OFF_W:0]   co_load_grp   = (SMEM_OFF_W+1)'(co_load_off) & ~((SMEM_OFF_W+1)'(tiled_step_q) - (SMEM_OFF_W+1)'(1));
++    wire [FILL_W-1:0]     co_load_room  = FILL_W'(SMEM_WORD_SIZE) - FILL_W'(co_load_grp);
++    wire [FILL_W-1:0]     co_load_cap_first = is_flat_w
++        ? (FILL_W'((tcn_mask_q - fb_load_n_in) + 16'd1) << esize_q)
++        : ((intra_n_sh_q >= 5'(SMEM_OFF_W)) ? FILL_W'(elem_bytes_q)
++                                            : (co_load_room >> co_lg_k_q));
++`endif
+     wire [SMEM_ADDR_WIDTH-1:0] new_start_word    = SMEM_ADDR_WIDTH'(fb_load_smem_byte_addr >> SMEM_OFF_W);
+     //   Row-major fill level = leading-offset padding + valid bytes.
+     //   K-major fill level   = exactly valid_length (each elem drained alone).
+@@ -489,9 +582,21 @@ module VX_dxa_smem_wr import VX_gpu_pkg::*, VX_dxa_pkg::*; #(
+             fb_n_wrap_r      <= 1'b0;
+             fb_tag_r         <= '0;
+             fb_last_r        <= 1'b0;
++        `ifdef VX_CFG_DXA_SCATTER_COALESCE
++            co_first_r       <= 1'b0;
++            co_cap_first_r   <= '0;
++        `endif
+         end else begin
+             // ── Drain advance (mid-CL beat) ──
+             if (drain_fire && ~drain_will_empty) begin
++            `ifdef VX_CFG_DXA_SCATTER_COALESCE
++                if (co_en) begin
++                    km_rd_off_r    <= km_rd_off_r + CL_OFF_BITS'(co_bytes);
++                    fb_level_r     <= fb_level_r - co_bytes;
++                    fb_byte_addr_r <= fb_byte_addr_r + co_addr_inc;
++                    co_first_r     <= 1'b0;
++                end else
++            `endif
+                 if (scatter) begin
+                     // Read pointer advances; fb_data_r is NOT shifted. K-major
+                     // strides the dest uniformly; tiled advances it by the
+@@ -528,6 +633,10 @@ module VX_dxa_smem_wr import VX_gpu_pkg::*, VX_dxa_pkg::*; #(
+                 fb_tag_r         <= fb_load_tag;
+                 fb_last_r        <= fb_load_last;
+                 fb_active_r      <= 1'b1;
++            `ifdef VX_CFG_DXA_SCATTER_COALESCE
++                co_first_r       <= 1'b1;
++                co_cap_first_r   <= co_load_cap_first;
++            `endif
+             end else if (drain_emptying_now) begin
+                 fb_data_r   <= '0;
+                 fb_level_r  <= '0;
+diff --git a/sim/simx/dxa/dxa_core.cpp b/sim/simx/dxa/dxa_core.cpp
+index 3e1efdd..cb5933f 100644
+--- a/sim/simx/dxa/dxa_core.cpp
++++ b/sim/simx/dxa/dxa_core.cpp
+@@ -723,8 +723,10 @@ private:
+     constexpr uint64_t kRowMask = ~uint64_t(DxaCore::LMEM_ROW_SIZE - 1);
+     uint64_t beat_row = UINT64_MAX;
+   #ifdef VX_CFG_DXA_SCATTER_COALESCE
+-    // Each LMEM DMA channel takes one block write per beat.
++    // Each LMEM DMA channel takes one block write per beat; a tiled scatter
++    // beat ends at beat_e_end, the first element past its run.
+     uint32_t used_halves = 0;
++    uint32_t beat_e_end  = UINT32_MAX;
+   #endif
+ 
+     for (uint32_t emitted = 0; emitted < DxaCore::LMEM_PORTS_PER_CORE; ++emitted) {
+@@ -813,10 +815,24 @@ private:
+       // A contiguous span is one write; a scatter span writes element e0.
+       const bool     beat_scatter = lw.scatter;
+     #ifdef VX_CFG_DXA_SCATTER_COALESCE
+-      // Coalesced scatter: one write carries every consecutive element of
+-      // the line that lands in this block, under a byte mask (the loop below
+-      // stops at the first element outside the block or the beat's row).
+-      const uint32_t e_end = num_elems;
++      // Tiled (Flat/BlockMajor) destinations advance by a power-of-two step
++      // (Flat only within an n-block), so a beat carries the run of
++      // consecutive elements that land in this LMEM row, as the RTL drains
++      // it; K-major keeps one element per beat. The loop below also stops at
++      // the end of this block.
++      const bool coalesce = beat_scatter && tiled;
++      if (beat_e_end == UINT32_MAX) {
++        beat_e_end = num_elems;
++        if (beat_scatter && !tiled) {
++          beat_e_end = e0 + 1;
++        } else if (coalesce && DestLayout(lw.dest_layout) == DestLayout::Flat) {
++          uint32_t n_in = (lw.tile_n_base + e0) % t_tcN;
++          beat_e_end = std::min(num_elems, e0 + (t_tcN - n_in));
++        }
++      } else if (e0 >= beat_e_end) {
++        break; // the run ended at an n-block boundary
++      }
++      const uint32_t e_end = beat_scatter ? std::min(num_elems, beat_e_end) : num_elems;
+     #else
+       const uint32_t e_end = beat_scatter ? (e0 + 1) : num_elems;
+     #endif
+@@ -887,9 +903,12 @@ private:
+         break; // a scatter beat writes one element
+       }
+     #else
+-      // A coalesced scatter beat goes on to the line's next block run if it
+-      // lies in the same LMEM row and on a free channel (checked above).
+-      (void)beat_scatter;
++      // A coalesced run goes on to its next block if that lies in the same
++      // LMEM row and on a free channel (checked above); it never spans two
++      // lines or two multicast receivers.
++      if (beat_scatter && (!coalesce || is_last_elem)) {
++        break;
++      }
+     #endif
+     } // per-tick row-beat emission loop
+   }
+-- 
+2.55.0.windows.3
+
