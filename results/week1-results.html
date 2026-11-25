@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  .viz { font-family: var(--font-sans, system-ui, -apple-system, "Segoe UI", sans-serif); color: var(--foreground); display: flex; flex-direction: column; gap: 26px; padding: 2px 0 10px; }
+  .viz h2 { font-size: 15px; font-weight: 650; margin: 0 0 2px; }
+  .viz .sub { font-size: 12.5px; color: var(--muted-foreground); margin: 0 0 12px; }
+  /* headline */
+  .top { display: grid; grid-template-columns: 1.25fr 1fr 1fr 1fr; gap: 10px; }
+  .tile { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius, 8px); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+  .tile .label { font-size: 12px; color: var(--muted-foreground); }
+  .tile .value { font-size: 26px; font-weight: 650; line-height: 1.1; }
+  .tile .note { font-size: 11.5px; color: var(--muted-foreground); }
+  .hero .value { font-size: 52px; letter-spacing: -0.01em; }
+  /* chart */
+  .chart { position: relative; }
+  .row { display: grid; grid-template-columns: 210px 1fr; align-items: center; height: 30px; }
+  .row .name { font-size: 12.5px; color: var(--foreground); padding-right: 12px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .name small { color: var(--muted-foreground); }
+  .track { position: relative; height: 30px; }
+  .bar { position: absolute; top: 8px; height: 14px; left: 0; border-radius: 0 4px 4px 0; background: var(--chart-1); }
+  .bar.na { background: color-mix(in srgb, var(--muted-foreground) 45%, transparent); }
+  .val { position: absolute; top: 6px; font-size: 12px; font-weight: 600; color: var(--foreground); white-space: nowrap; padding-left: 6px; font-variant-numeric: tabular-nums; }
+  .grid { position: absolute; top: 0; bottom: 24px; left: 210px; right: 0; pointer-events: none; }
+  .gl { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border); }
+  .gl.one { background: var(--muted-foreground); opacity: .7; }
+  .axis { display: grid; grid-template-columns: 210px 1fr; height: 24px; }
+  .ticks { position: relative; }
+  .tick { position: absolute; top: 6px; transform: translateX(-50%); font-size: 11px; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted-foreground); margin-top: 6px; }
+  .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  .tip { position: absolute; pointer-events: none; background: var(--popover); color: var(--popover-foreground); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 12px; line-height: 1.45; box-shadow: 0 4px 14px rgba(0,0,0,.18); opacity: 0; transition: opacity .08s; white-space: nowrap; z-index: 5; }
+  .row:hover .bar { filter: brightness(1.12); }
+  /* inside */
+  table.ba { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.ba td, table.ba th { padding: 7px 10px; border-top: 1px solid var(--border); text-align: left; }
+  table.ba th { font-weight: 600; color: var(--muted-foreground); font-size: 11.5px; border-top: 0; }
+  table.ba td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.ba td.gain { font-weight: 650; }
+  /* renders */
+  .gallery { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .shot { display: flex; flex-direction: column; gap: 5px; }
+  .shot img { width: 100%; aspect-ratio: 1; image-rendering: pixelated; border-radius: 6px; border: 1px solid var(--border); background: #000; }
+  .shot .cap { font-size: 11.5px; color: var(--foreground); }
+  .shot .cap span { display: block; color: var(--muted-foreground); font-size: 11px; }
+  details { font-size: 12.5px; }
+  details summary { cursor: pointer; color: var(--muted-foreground); }
+  table.raw { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+  table.raw td, table.raw th { padding: 5px 8px; border-top: 1px solid var(--border); text-align: right; font-variant-numeric: tabular-nums; }
+  table.raw td:first-child, table.raw th:first-child { text-align: left; }
+  table.raw th { color: var(--muted-foreground); font-weight: 600; border-top: 0; }
+  @media (max-width: 600px) {
+    .top { grid-template-columns: 1fr 1fr; }
+    .hero { grid-column: 1 / -1; }
+    .row, .axis { grid-template-columns: 128px 1fr; }
+    .grid { left: 128px; }
+    .gallery { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="viz">
+
+  <section class="top">
+    <div class="tile hero">
+      <div class="label">Faster than Vortex on its best AI matrix program</div>
+      <div class="value">2.0×</div>
+      <div class="note">108,524 → 54,077 clock cycles · same answers</div>
+    </div>
+    <div class="tile">
+      <div class="label">Average across 9 bulk-copy workloads</div>
+      <div class="value">1.8×</div>
+      <div class="note">range 1.2× – 2.7× (geometric mean)</div>
+    </div>
+    <div class="tile">
+      <div class="label">AI unit actually busy</div>
+      <div class="value">3.8% → 7.6%</div>
+      <div class="note">still mostly waiting: headroom</div>
+    </div>
+    <div class="tile">
+      <div class="label">Official Vortex tests passing</div>
+      <div class="value" id="tests">83 / 83</div>
+      <div class="note">with our changes switched on</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Speed-up by workload</h2>
+    <p class="sub">Simulated clock cycles, Vortex ÷ ours. Same program, same inputs, same chip size. Hover a bar for the raw cycles.</p>
+    <div class="chart" id="chart">
+      <div class="grid" id="grid"></div>
+      <div id="rows"></div>
+      <div class="axis"><div></div><div class="ticks" id="ticks"></div></div>
+      <div class="tip" id="tip"></div>
+    </div>
+    <div class="legend">
+      <span><i class="sw" style="background: var(--chart-1)"></i>uses the bulk-copy engine (our main fix applies)</span>
+      <span><i class="sw" style="background: color-mix(in srgb, var(--muted-foreground) 45%, transparent)"></i>copies with ordinary instructions (main fix doesn't apply)</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>What changed inside the chip</h2>
+    <p class="sub">Headline workload. The copy engine was rearranging matrix B one 2-byte number per cycle; now it writes up to 8 at once.</p>
+    <table class="ba">
+      <tr><th>Measure</th><th>Vortex</th><th>Ours</th><th>Change</th></tr>
+      <tr><td>Copy-engine writes into local memory</td><td class="n">73,728</td><td class="n">16,384</td><td class="n gain">4.5× fewer</td></tr>
+      <tr><td>Average wait per memory fetch</td><td class="n">416 cycles</td><td class="n">196 cycles</td><td class="n gain">2.1× shorter</td></tr>
+      <tr><td>Cycles the copy engine was blocked (no free request slot)</td><td class="n">59,229</td><td class="n">30,302</td><td class="n gain">49% fewer</td></tr>
+      <tr><td>Cores idle, waiting for data</td><td class="n">93%</td><td class="n">84%</td><td class="n">still high: next target</td></tr>
+    </table>
+  </section>
+
+
+  <section>
+    <details>
+      <summary>Table view: every workload, raw cycles</summary>
+      <table class="raw" id="raw"></table>
+    </details>
+  </section>
+
+</div>
+<script>
+const DATA = [
+  { n: 'Large tiles', d: 'NRC 32, 128×128×256', b: 89269, o: 32801, dxa: true },
+  { n: '16-wide warps', d: '128×128×256', b: 185924, o: 91412, dxa: true },
+  { n: 'Bigger matrix', d: '256×256×256', b: 429694, o: 211588, dxa: true },
+  { n: 'Medium tiles ★ headline', d: 'NRC 16, 128×128×256', b: 108524, o: 54077, dxa: true },
+  { n: 'A operand from registers', d: '128×128×256', b: 108081, o: 54250, dxa: true },
+  { n: 'No double-buffering', d: '128×128×256', b: 109360, o: 56551, dxa: true },
+  { n: 'Small tiles', d: 'NRC 8, 128×128×256', b: 148543, o: 101502, dxa: true },
+  { n: 'Sparse AI maths', d: '2:4 sparsity, 128³', b: 87912, o: 65015, dxa: true },
+  { n: 'Multicast copy', d: 'copy to several CTAs', b: 88945, o: 72379, dxa: true },
+  { n: 'Ordinary-copy matrix', d: '128³, no copy engine', b: 122810, o: 121651, dxa: false },
+  { n: 'Attention (chatbot maths)', d: 'ordinary copies, N=128, D=64', b: 17078890, o: 17075621, dxa: false },
+];
+const MAX = 3;
+const rows = document.getElementById('rows');
+const ticks = document.getElementById('ticks');
+const grid = document.getElementById('grid');
+const tip = document.getElementById('tip');
+const fmt = x => x.toLocaleString('en-US');
+const pct = v => (v / MAX * 92) + '%';
+for (let t = 0; t <= MAX; t += 0.5) {
+  const el = document.createElement('div'); el.className = 'tick'; el.style.left = pct(t); el.textContent = (t % 1 === 0 ? t.toFixed(0) : t.toFixed(1)) + '×'; ticks.appendChild(el);
+  const g = document.createElement('div'); g.className = 'gl' + (t === 1 ? ' one' : ''); g.style.left = pct(t); grid.appendChild(g);
+}
+DATA.forEach(r => {
+  const s = r.b / r.o;
+  const row = document.createElement('div'); row.className = 'row';
+  row.innerHTML = `<div class="name" title="${r.n} (${r.d})">${r.n}</div><div class="track"><div class="bar${r.dxa ? '' : ' na'}" style="width:${pct(s)}"></div><div class="val" style="left:${pct(s)}">${s.toFixed(2)}×</div></div>`;
+  row.addEventListener('mousemove', e => {
+    const box = document.getElementById('chart').getBoundingClientRect();
+    tip.innerHTML = `<b>${r.n}</b><br>${r.d}<br>Vortex: ${fmt(r.b)} cycles<br>Ours: ${fmt(r.o)} cycles<br>Speed-up: ${s.toFixed(2)}×`;
+    let x = e.clientX - box.left + 14, y = e.clientY - box.top + 10;
+    if (x + 220 > box.width) x = e.clientX - box.left - 230;
+    tip.style.left = x + 'px'; tip.style.top = y + 'px'; tip.style.opacity = 1;
+  });
+  row.addEventListener('mouseleave', () => { tip.style.opacity = 0; });
+  rows.appendChild(row);
+});
+const raw = document.getElementById('raw');
+raw.innerHTML = '<tr><th>Workload</th><th>Setting</th><th>Vortex cycles</th><th>Our cycles</th><th>Speed-up</th></tr>' +
+  DATA.map(r => `<tr><td>${r.n.replace(' ★ headline','')}</td><td>${r.d}</td><td>${fmt(r.b)}</td><td>${fmt(r.o)}</td><td>${(r.b / r.o).toFixed(2)}×</td></tr>`).join('');
+</script>
+</body>
+</html>

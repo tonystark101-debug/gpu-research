@@ -1,0 +1,12 @@
+CONFIGS=-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_TCU_TBUF_PREFETCH
+./ci/blackbox.sh --driver=simx --app=sgemm_tcu --threads=8
+CONFIGS=-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_TCU_TBUF_PREFETCH -DVX_CFG_NUM_THREADS=8
+Running: CONFIGS="-DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_TCU_TBUF_PREFETCH -DVX_CFG_NUM_THREADS=8" make -C "./ci/../tests/regression/sgemm_tcu" runtime-simx > /dev/null
+/home/User/vortex_ours1/sim/simx/tcu/tcu_unit.cpp:1837:14: error: ‘abuf_slot_t’ was not declared in this scope
+ 1837 |   std::array<abuf_slot_t, VX_CFG_NUM_TCU_BLOCKS> abuf_pf_;
+      |              ^~~~~~~~~~~
+compilation terminated due to -Wfatal-errors.
+make[2]: *** [Makefile:206: /home/User/vortex_ours1/build/sw/runtime/obj/tcu/tcu_unit.o] Error 1
+make[1]: *** [Makefile:38: /home/User/vortex_ours1/build/sw/runtime/libsimx.so] Error 2
+make: *** [../common.mk:241: runtime-simx] Error 2
+Error building driver: simx (via ./ci/../tests/regression/sgemm_tcu)

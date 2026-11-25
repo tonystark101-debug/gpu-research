@@ -1,0 +1,6 @@
+id	status	cycles	instrs	tbuf_stalls	tbuf_hits	lmem_reads	seconds
+dxa_db_nrc16_base	PASS	108524	30712	84181	4096	17408	105
+dxa_db_nrc16_ours	PASS	108111	30712	72509	11079	20182	28
+dxa_db_nrc8_base	PASS	148543	43984	165527	4096	33792	10
+dxa_db_nrc8_ours	PASS	147608	43984	147973	20503	36864	10
+AB DONE

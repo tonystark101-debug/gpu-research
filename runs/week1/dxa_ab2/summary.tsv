@@ -1,0 +1,5 @@
+id	status	cycles	instrs	tbuf_stalls	tbuf_hits	lmem_reads	seconds
+nrc16_coal	PASS	56743	30712				14
+nrc16_coal_pf	PASS	54077	30712	71462	11018	20155	10
+nrc16_coal_pf_p1	PASS	54077	30712				1
+AB2 DONE

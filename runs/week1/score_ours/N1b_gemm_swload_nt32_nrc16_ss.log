@@ -1,0 +1,48 @@
+CONFIGS=-DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DITYPE=fp16 -DOTYPE=fp32 -DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DVX_CFG_ISSUE_WIDTH=4 -DWGMMA_SS -DWGMMA_NRC=16 -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_TCU_TBUF_PREFETCH -DPERF_ENABLE
+Running: CONFIGS="-DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DITYPE=fp16 -DOTYPE=fp32 -DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DVX_CFG_ISSUE_WIDTH=4 -DWGMMA_SS -DWGMMA_NRC=16 -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_TCU_TBUF_PREFETCH -DPERF_ENABLE" make -C "./ci/../tests/regression/sgemm_tcu_wg" runtime-simx > /dev/null
+Running: OPTS="-m128 -n128 -k128" CONFIGS="-DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DITYPE=fp16 -DOTYPE=fp32 -DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DVX_CFG_ISSUE_WIDTH=4 -DWGMMA_SS -DWGMMA_NRC=16 -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_TCU_TBUF_PREFETCH -DPERF_ENABLE" make -C "./ci/../tests/regression/sgemm_tcu_wg" run-simx
+make: Entering directory '/home/User/vortex_perfB/build/tests/regression/sgemm_tcu_wg'
+CONFIGS="-DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DITYPE=fp16 -DOTYPE=fp32 -DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DVX_CFG_ISSUE_WIDTH=4 -DWGMMA_SS -DWGMMA_NRC=16 -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_TCU_TBUF_PREFETCH -DPERF_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE"     make -C /home/User/vortex_perfB/build/sw/runtime/stub DESTDIR=/home/User/vortex_perfB/build/sw/runtime
+make[1]: Entering directory '/home/User/vortex_perfB/build/sw/runtime/stub'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/home/User/vortex_perfB/build/sw/runtime/stub'
+CONFIGS="-DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DITYPE=fp16 -DOTYPE=fp32 -DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DVX_CFG_ISSUE_WIDTH=4 -DWGMMA_SS -DWGMMA_NRC=16 -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_TCU_TBUF_PREFETCH -DPERF_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE"     make -C /home/User/vortex_perfB/build/sw/runtime/simx DESTDIR=/home/User/vortex_perfB/build/sw/runtime
+make[1]: Entering directory '/home/User/vortex_perfB/build/sw/runtime/simx'
+DESTDIR=/home/User/vortex_perfB/build/sw/runtime make -C /home/User/vortex_perfB/build/sim/simx /home/User/vortex_perfB/build/sw/runtime/libsimx.so
+make[2]: Entering directory '/home/User/vortex_perfB/build/sim/simx'
+make[2]: Leaving directory '/home/User/vortex_perfB/build/sim/simx'
+make[1]: Leaving directory '/home/User/vortex_perfB/build/sw/runtime/simx'
+LD_LIBRARY_PATH=/home/User/vortex_perfB/build/sw/runtime: VORTEX_DRIVER=simx ./sgemm_tcu_wg -m128 -n128 -k128   
+open device connection
+input data type: fp16 (id=2)
+output data type: fp32 (id=0)
+WMMA Core Dimension: M=8, N=4, K=16
+WGMMA Per-Warp Tile: M=16, N=32, K=16
+WGMMA CTA Tile: M=64, N=32, K=16
+Grid dimension: 4x2
+Block dimension: 128x1
+matrix A: 128x128
+matrix B: 128x128
+matrix C: 128x128
+allocate device memory
+A_addr=0x30000
+B_addr=0x38000
+C_addr=0x40000
+upload matrix A buffer
+upload matrix B buffer
+load kernel module
+start device
+download destination buffer
+wait for completion
+Elapsed time: 782 ms
+PERF: core0: tcu: tbuf_stalls=2687, tbuf_cache_hits=2082, lmem_reads=1550
+PERF: tcu: total_tbuf_stalls=2687, total_tbuf_cache_hits=2082, total_lmem_reads=1550
+PERF: instrs=98368, cycles=121651, IPC=0.809
+verify result
+reference drift: max=18 ULP, bound=25 ULP (K=128)
+cleanup
+PERF: core0: tcu: tbuf_stalls=2687, tbuf_cache_hits=2082, lmem_reads=1550
+PERF: tcu: total_tbuf_stalls=2687, total_tbuf_cache_hits=2082, total_lmem_reads=1550
+PERF: instrs=98368, cycles=121651, IPC=0.809
+PASSED!
+make: Leaving directory '/home/User/vortex_perfB/build/tests/regression/sgemm_tcu_wg'

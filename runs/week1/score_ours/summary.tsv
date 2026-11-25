@@ -1,0 +1,16 @@
+id	status	cycles	instrs	tbuf_stalls	tbuf_hits	lmem_reads	seconds
+S1_nt32_nrc16_ss_db_128x128x256	PASS	54077	30712				107
+S2_nt32_nrc8_ss_db_128x128x256	PASS	101502	43984				11
+S3_nt32_nrc32_ss_db_128x128x256	PASS	32801	24092				10
+S4_nt32_nrc16_ss_db_256x256x256	PASS	211588	122752				8
+S5_nt16_nrc16_ss_db_128x128x256	PASS	91412	61392				108
+S6_nt32_nrc16_rs_db_128x128x256	PASS	54250	32504				9
+S7_nt32_nrc16_ss_single_128x128x256	PASS	56551	24296				10
+S8_mcast_default	PASS	72379	52800				108
+S9_sparse_dxa_nt32_128x128x128	PASS	65015	22240				29
+N1_gemm_swload_nt32_nrc16_ss	FAIL						100
+N2_attn_nt16_fp16	PASS						152
+SCORECARD DONE
+N1b_gemm_swload_nt32_nrc16_ss	PASS	121651	98368	2687	2082	1550	23
+N2b_attn_nt16_fp16	PASS	17075621	5694007	49874	12497	22914	74
+RERUN DONE

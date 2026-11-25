@@ -1,0 +1,6 @@
+id	status	cycles	instrs	tbuf_stalls	tbuf_hits	lmem_reads	seconds
+dxa_nrc16_perf1	PASS	108524	30712				6
+dxa_nrc16_perf16	PASS	108524	30712				1
+dxa_nrc16_perf7	PASS	108524	30712				2
+dxa_nrc16_perf4	PASS	108524	30712				1
+PROFILE DONE

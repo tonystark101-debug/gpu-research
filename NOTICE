@@ -1,0 +1,19 @@
+This repository contains a patch (patches/week1-vortex-f53bc48.patch) that
+modifies source files of Vortex GPGPU:
+
+  https://github.com/vortexgpgpu/vortex
+  Copyright © 2019-2023 the Vortex authors
+  Licensed under the Apache License, Version 2.0
+
+The modified files are:
+  sim/simx/dxa/dxa_core.cpp
+  sim/simx/tcu/tcu_tbuf.cpp
+  sim/simx/tcu/tcu_tbuf.h
+  sim/simx/tcu/tcu_unit.cpp
+
+Every change is enclosed in #ifdef VX_CFG_DXA_SCATTER_COALESCE or
+#ifdef VX_CFG_TCU_TBUF_PREFETCH (changes made in November 2026), so with
+both flags off the files behave exactly as upstream.
+
+The logs under runs/ are outputs of Vortex's own test programs, run on
+Vortex built from the commit above, with and without the patch.

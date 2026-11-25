@@ -1,0 +1,91 @@
+# Open GPU research
+
+We're a small team designing GPU and AI-accelerator hardware in the open. We start by beating the best open-source GPU, then climb from there.
+
+## Week 1 result: 2× faster than open-source Vortex on its best AI matrix program (in simulation)
+
+[Vortex](https://github.com/vortexgpgpu/vortex) is the leading open-source GPU (Georgia Tech, Apache-2.0). We profiled its fastest matrix-multiply program and made two changes:
+
+1. **Copy engine: coalesced writes (the main win).** Vortex's bulk-copy engine (its version of NVIDIA Hopper's TMA) rearranged matrix B into the AI unit's layout one 2-byte number per clock. Its write path into local memory is 128 bytes wide. Our version writes every number that lands in the same 64-byte block in one byte-masked write, and fills both halves of a row in the same clock: 8 numbers per clock instead of 1.
+2. **AI unit: fetch-ahead tile buffers.** The tensor unit's operand buffers get a second slot. While one slice is in use, the next slice of the same instruction loads at the lowest priority. Each prefetched slice is tagged with its instruction and is never used by a later one.
+
+| Workload (1 core, 8 warps, fp16 in / fp32 out) | Vortex cycles | Ours | Speed-up |
+|---|---:|---:|---:|
+| Large tiles (NRC 32), 128×128×256 | 89,269 | 32,801 | **2.72×** |
+| 16-wide warps, 128×128×256 | 185,924 | 91,412 | **2.03×** |
+| Bigger matrix, 256×256×256 | 429,694 | 211,588 | **2.03×** |
+| **Medium tiles (NRC 16), 128×128×256: Vortex's shipped config** | **108,524** | **54,077** | **2.01×** |
+| A operand from registers, 128×128×256 | 108,081 | 54,250 | **1.99×** |
+| No double-buffering, 128×128×256 | 109,360 | 56,551 | **1.93×** |
+| Small tiles (NRC 8), 128×128×256 | 148,543 | 101,502 | **1.46×** |
+| Sparse (2:4), 128×128×128 | 87,912 | 65,015 | **1.35×** |
+| Multicast copy, 128×64×32 | 88,945 | 72,379 | **1.23×** |
+| Ordinary-copy matrix (no copy engine), 128³ | 122,810 | 121,651 | 1.01× |
+| Attention (no copy engine), N=128, D=64 | 17,078,890 | 17,075,621 | 1.00× |
+
+- **Geometric mean over the 9 copy-engine workloads: 1.81×.**
+- **Correctness:** every run passes Vortex's built-in result check. With both changes on, all 83 cases of Vortex's official simulator test lists pass: copy engine 40, warp-group tensor 28, tensor 15.
+- **Why it was slow:** on the shipped config, the AI unit was busy 3.8% of the time. The copy engine made 73,728 separate local-memory writes, and its 8 request slots were full for 59,229 of 108,524 cycles. With the change: 16,384 writes, 30,302 blocked cycles, and the AI unit busy 7.6% of the time.
+
+Full write-up: [docs/week1-report.md](docs/week1-report.md). Results page: [results/week1-results.html](results/week1-results.html).
+
+### Honest caveats
+
+1. **Simulator only, so far.** Both changes are in Vortex's cycle-level C++ simulator (SimX), not yet in its Verilog. Vortex's CI holds SimX to the Verilog's timing within a tolerance, so this is a strong signal, not proof. The Verilog version is next.
+2. **Small scale:** 1 core, matrices up to 256×256×256.
+3. **The AI unit is still idle about 92% of the time** on the headline program, so there's a lot more to win.
+4. **Attention is unchanged**, because Vortex's attention program doesn't use the copy engine.
+
+## Reproduce
+
+Base: Vortex commit `f53bc480d2fa06a6f728ae78ba4b83cdd20a289e` (24 Nov 2026). Both changes sit behind compile flags, so with the flags off the simulator matches upstream exactly.
+
+| Flag | Files | Change |
+|---|---|---|
+| `VX_CFG_DXA_SCATTER_COALESCE` | `sim/simx/dxa/dxa_core.cpp` | Coalesced, byte-masked scatter writes into local memory |
+| `VX_CFG_TCU_TBUF_PREFETCH` | `sim/simx/tcu/tcu_tbuf.{h,cpp}`, `sim/simx/tcu/tcu_unit.cpp` | Second A/B tile-buffer slot, filled ahead at the lowest port priority (needs WGMMA) |
+
+On Ubuntu 22.04 (we used 16 vCPUs):
+
+```bash
+git clone --recursive https://github.com/vortexgpgpu/vortex.git && cd vortex
+git checkout f53bc480d2fa06a6f728ae78ba4b83cdd20a289e
+git apply /path/to/patches/week1-vortex-f53bc48.patch
+sudo ./ci/install_dependencies.sh
+mkdir build && cd build && ../configure --xlen=32 --tooldir=$HOME/tools
+./ci/toolchain_install.sh --all && make -s -j16
+
+# Vortex's best GEMM (DXA double-buffered, fp16 WGMMA), as shipped:
+B="-DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE \
+   -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DITYPE=fp16 -DOTYPE=fp32 -DWGMMA_SS \
+   -DDXA_DOUBLE_BUFFER -DWGMMA_NRC=16"
+CONFIGS="$B" ./ci/blackbox.sh --driver=simx --app=sgemm_tcu_wg_dxa --perf=16 --args="-m128 -n128 -k256"
+# ours:
+CONFIGS="$B -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_TCU_TBUF_PREFETCH" \
+  ./ci/blackbox.sh --driver=simx --app=sgemm_tcu_wg_dxa --perf=16 --args="-m128 -n128 -k256"
+```
+
+- [scripts/](scripts/): every script we ran, including the scorecard (`perf_scorecard.sh`) and the official-test sweep (`correctness_sweep.py`).
+- [runs/week1/](runs/week1/): the raw logs and summary tables behind every number above.
+
+## Our first chips (Tiny Tapeout)
+
+Our first chip is a mini tensor core. It computes C += A × B on 4×4 int8 matrices with int32 totals, using four multipliers as one 4-wide dot-product unit.
+
+- **Where:** the Tiny Tapeout SkyWater 130 nm shuttle (TTSKY26e, closes 30 Nov 2026).
+- **Size and checks:** 6 tiles. Zero layout-rule (DRC) errors and zero layout-vs-netlist (LVS) errors. All 6 tests pass on the final gate-level netlist.
+- **Speed:** meets 50 MHz at typical conditions, with 7.7 ns of slack. At the hot, low-voltage corner it reaches about 45 MHz.
+- **180 nm version:** a GlobalFoundries 180 nm version also passes every check. The 7 Dec shuttle is full, so it waits for a free slot.
+
+Each design lives in its own repository, as Tiny Tapeout requires: [tt-minitensor-sky130](https://github.com/tonystark101-debug/tt-minitensor-sky130).
+
+## Next
+
+1. Build the copy-engine change into Vortex's Verilog, and run its RTL tests and its simulator-vs-RTL parity checks. Then offer it upstream.
+2. A reorder buffer that writes whole 64-byte blocks (up to 32× fewer writes), plus more copy-engine request slots.
+3. An attention program that uses the copy engine.
+4. First FPGA run, for real clock speed and power.
+
+## License and credits
+
+Apache License 2.0 (see [LICENSE](LICENSE)). Our patch modifies files of Vortex GPGPU, which is also Apache-2.0; see [NOTICE](NOTICE). Thanks to the Vortex team at Georgia Tech for an open GPU this good to build on.

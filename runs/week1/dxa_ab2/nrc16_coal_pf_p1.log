@@ -1,0 +1,44 @@
+CONFIGS=-DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DITYPE=fp16 -DOTYPE=fp32 -DWGMMA_SS -DDXA_DOUBLE_BUFFER -DWGMMA_NRC=16 -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_TCU_TBUF_PREFETCH -DPERF_ENABLE
+Running: CONFIGS="-DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DITYPE=fp16 -DOTYPE=fp32 -DWGMMA_SS -DDXA_DOUBLE_BUFFER -DWGMMA_NRC=16 -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_TCU_TBUF_PREFETCH -DPERF_ENABLE" make -C "./ci/../tests/regression/sgemm_tcu_wg_dxa" runtime-simx > /dev/null
+Running: OPTS="-m128 -n128 -k256" CONFIGS="-DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DITYPE=fp16 -DOTYPE=fp32 -DWGMMA_SS -DDXA_DOUBLE_BUFFER -DWGMMA_NRC=16 -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_TCU_TBUF_PREFETCH -DPERF_ENABLE" make -C "./ci/../tests/regression/sgemm_tcu_wg_dxa" run-simx
+make: Entering directory '/home/User/vortex_ours/build/tests/regression/sgemm_tcu_wg_dxa'
+CONFIGS="-DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DITYPE=fp16 -DOTYPE=fp32 -DWGMMA_SS -DDXA_DOUBLE_BUFFER -DWGMMA_NRC=16 -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_TCU_TBUF_PREFETCH -DPERF_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE"     make -C /home/User/vortex_ours/build/sw/runtime/stub DESTDIR=/home/User/vortex_ours/build/sw/runtime
+make[1]: Entering directory '/home/User/vortex_ours/build/sw/runtime/stub'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/home/User/vortex_ours/build/sw/runtime/stub'
+CONFIGS="-DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DITYPE=fp16 -DOTYPE=fp32 -DWGMMA_SS -DDXA_DOUBLE_BUFFER -DWGMMA_NRC=16 -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_TCU_TBUF_PREFETCH -DPERF_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE"     make -C /home/User/vortex_ours/build/sw/runtime/simx DESTDIR=/home/User/vortex_ours/build/sw/runtime
+make[1]: Entering directory '/home/User/vortex_ours/build/sw/runtime/simx'
+DESTDIR=/home/User/vortex_ours/build/sw/runtime make -C /home/User/vortex_ours/build/sim/simx /home/User/vortex_ours/build/sw/runtime/libsimx.so
+make[2]: Entering directory '/home/User/vortex_ours/build/sim/simx'
+make[2]: Leaving directory '/home/User/vortex_ours/build/sim/simx'
+make[1]: Leaving directory '/home/User/vortex_ours/build/sw/runtime/simx'
+LD_LIBRARY_PATH=/home/User/vortex_ours/build/sw/runtime: VORTEX_DRIVER=simx ./sgemm_tcu_wg_dxa -m128 -n128 -k256
+open device connection
+input type: fp16, output type: fp32
+WGMMA tile: M=16, N=32, K=16
+CTA tile: M=64 (warps=4)
+grid: 4x2
+block: 128x1
+matrix A: 128x256
+matrix B: 256x128
+smem: 6144 bytes
+allocate device memory
+A_addr=0x30000
+B_addr=0x40000
+C_addr=0x50000
+upload source data
+load kernel module
+start device
+download result
+wait for completion
+Elapsed time: 805 ms
+verify result
+reference drift: max=36 ULP, bound=51 ULP (K=256)
+PERF: scheduler: idle=84%, occupancy=8.0 (100%), simt_util=32.0 (100%)
+PERF: stalls: fetch=0%, ibuf=0%, scrb=1%, opds=1%, alu=0%, lsu=0%, sfu=0%, fpu=0%, tcu=0%
+PERF: inst_mix: alu=35%, lsu=2%, sfu=7%, fpu=2%, tcu=53%
+PERF: branches: total=2272, divergent=0 (rate=0%)
+PERF: memory: ifetch_lat=6.42, load_lat=30.04, loads=3072, stores=16384
+PERF: instrs=30712, cycles=54077, IPC=0.568
+PASSED!
+make: Leaving directory '/home/User/vortex_ours/build/tests/regression/sgemm_tcu_wg_dxa'

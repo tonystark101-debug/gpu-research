@@ -1,0 +1,3 @@
+id	status	cycles	instrs	tbuf_stalls	tbuf_hits	lmem_reads	seconds
+S1_final_ours	PASS	54077	30712				25
+S1_final_base	PASS	108524	30712				28

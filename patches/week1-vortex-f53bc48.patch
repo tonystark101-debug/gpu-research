@@ -1,0 +1,454 @@
+diff --git a/sim/simx/dxa/dxa_core.cpp b/sim/simx/dxa/dxa_core.cpp
+index 1e7f62e..3e1efdd 100644
+--- a/sim/simx/dxa/dxa_core.cpp
++++ b/sim/simx/dxa/dxa_core.cpp
+@@ -722,6 +722,10 @@ private:
+ 
+     constexpr uint64_t kRowMask = ~uint64_t(DxaCore::LMEM_ROW_SIZE - 1);
+     uint64_t beat_row = UINT64_MAX;
++  #ifdef VX_CFG_DXA_SCATTER_COALESCE
++    // Each LMEM DMA channel takes one block write per beat.
++    uint32_t used_halves = 0;
++  #endif
+ 
+     for (uint32_t emitted = 0; emitted < DxaCore::LMEM_PORTS_PER_CORE; ++emitted) {
+       slot = w.drain_slot;
+@@ -788,6 +792,12 @@ private:
+       if (lmem_ch.full()) {
+         break; // backpressure
+       }
++    #ifdef VX_CFG_DXA_SCATTER_COALESCE
++      if ((used_halves >> half) & 1u) {
++        break; // this row half's channel already carries a write this beat
++      }
++      used_halves |= (1u << half);
++    #endif
+ 
+       // Build LMEM MemReq with TLM payload.
+       MemReq req;
+@@ -802,7 +812,14 @@ private:
+ 
+       // A contiguous span is one write; a scatter span writes element e0.
+       const bool     beat_scatter = lw.scatter;
++    #ifdef VX_CFG_DXA_SCATTER_COALESCE
++      // Coalesced scatter: one write carries every consecutive element of
++      // the line that lands in this block, under a byte mask (the loop below
++      // stops at the first element outside the block or the beat's row).
++      const uint32_t e_end = num_elems;
++    #else
+       const uint32_t e_end = beat_scatter ? (e0 + 1) : num_elems;
++    #endif
+       uint32_t ee = e0;
+       for (; ee < e_end; ++ee) {
+         uint64_t dest_byte = dest_byte_of(ee);
+@@ -865,9 +882,15 @@ private:
+           w.drain_slot = UINT32_MAX;
+         }
+       }
++    #ifndef VX_CFG_DXA_SCATTER_COALESCE
+       if (beat_scatter) {
+         break; // a scatter beat writes one element
+       }
++    #else
++      // A coalesced scatter beat goes on to the line's next block run if it
++      // lies in the same LMEM row and on a free channel (checked above).
++      (void)beat_scatter;
++    #endif
+     } // per-tick row-beat emission loop
+   }
+ 
+diff --git a/sim/simx/tcu/tcu_tbuf.cpp b/sim/simx/tcu/tcu_tbuf.cpp
+index 7c691f2..fb71332 100644
+--- a/sim/simx/tcu/tcu_tbuf.cpp
++++ b/sim/simx/tcu/tcu_tbuf.cpp
+@@ -17,6 +17,8 @@
+ #include <unordered_map>
+ #include <deque>
+ #include <array>
++#include <iostream>
++#include <utility>
+ 
+ using namespace vortex;
+ 
+@@ -27,9 +29,19 @@ constexpr uint64_t kLineMask = ~uint64_t(VX_CFG_MEM_BLOCK_SIZE - 1);
+ // Q+1 buffers share one LMEM port. Buffer IDs, in priority order:
+ //   0 .. VX_CFG_NUM_TCU_BLOCKS-1   → abuf[b]
+ //   VX_CFG_NUM_TCU_BLOCKS          → bbuf
++// With VX_CFG_TCU_TBUF_PREFETCH, Q+1 prefetch buffers follow at the lowest
++// priority, so a prefetch never delays a demand fill:
++//   VX_CFG_NUM_TCU_BLOCKS + 1      → bbuf prefetch
++//   VX_CFG_NUM_TCU_BLOCKS + 2 + b  → abuf[b] prefetch
++#ifdef TCU_TBUF_PREFETCH
++constexpr uint32_t kNumBuffers = 2 * (VX_CFG_NUM_TCU_BLOCKS + 1);
++#else
+ constexpr uint32_t kNumBuffers = VX_CFG_NUM_TCU_BLOCKS + 1;
++#endif
+ constexpr uint32_t kAOffset    = 0;
+ constexpr uint32_t kBOffset    = VX_CFG_NUM_TCU_BLOCKS;
++constexpr uint32_t kBpfOffset  = VX_CFG_NUM_TCU_BLOCKS + 1;
++constexpr uint32_t kApfOffset  = VX_CFG_NUM_TCU_BLOCKS + 2;
+ 
+ struct Buffer {
+   std::deque<TcuTbuf::LmemRead> pending_;
+@@ -154,7 +166,7 @@ public:
+       if (b.pending_.empty() || !b.inflight_.empty()) {
+         continue;
+       }
+-      if (s == kBOffset && b.rsp_seen_) {
++      if ((s == kBOffset || s == kBpfOffset) && b.rsp_seen_) {
+         continue;
+       }
+       this->issue(s, b);
+@@ -195,10 +207,36 @@ private:
+   }
+ 
+   std::string buf_name(uint32_t source) const {
+-    return (source == kBOffset) ? std::string("bbuf")
+-                                : ("abuf" + std::to_string(source - kAOffset));
++    if (source == kBOffset) {
++      return std::string("bbuf");
++    }
++    if (source == kBpfOffset) {
++      return std::string("bbuf_pf");
++    }
++    if (source >= kApfOffset) {
++      return "abuf_pf" + std::to_string(source - kApfOffset);
++    }
++    return "abuf" + std::to_string(source - kAOffset);
++  }
++
++public:
++  // Swap a completed prefetch buffer into its demand buffer. Both must be
++  // idle, so no response can arrive for a tag of either afterwards.
++  void promote(uint32_t dst, uint32_t src) {
++    auto& d = bufs_.at(dst);
++    auto& s = bufs_.at(src);
++    if (d.filling() || s.filling()) {
++      std::cerr << "*** TCU tbuf: promote of a filling buffer (" << buf_name(src)
++                << " -> " << buf_name(dst) << ")" << std::endl;
++      std::abort();
++    }
++    std::swap(d.lines_, s.lines_);
++    s.invalidate();
++    DT(3, simobject_->name() << " " << this->buf_name(src) << ": PROMOTE");
+   }
+ 
++private:
++
+   TcuTbuf* simobject_;
+   std::array<Buffer, kNumBuffers> bufs_;
+ };
+@@ -235,4 +273,20 @@ std::shared_ptr<mem_block_t> TcuTbuf::read_b(uint64_t line_addr) const {
+ void TcuTbuf::invalidate_a(uint32_t b) { impl_->buf(kAOffset + b).invalidate(); }
+ void TcuTbuf::invalidate_b()           { impl_->buf(kBOffset).invalidate(); }
+ 
++#ifdef TCU_TBUF_PREFETCH
++void TcuTbuf::fill_bpf(std::vector<LmemRead> reads) {
++  impl_->buf(kBpfOffset).fill(std::move(reads));
++}
++bool TcuTbuf::filling_bpf() const { return impl_->buf(kBpfOffset).filling(); }
++void TcuTbuf::promote_bpf()       { impl_->promote(kBOffset, kBpfOffset); }
++void TcuTbuf::invalidate_bpf()    { impl_->buf(kBpfOffset).invalidate(); }
++
++void TcuTbuf::fill_apf(uint32_t b, std::vector<LmemRead> reads) {
++  impl_->buf(kApfOffset + b).fill(std::move(reads));
++}
++bool TcuTbuf::filling_apf(uint32_t b) const { return impl_->buf(kApfOffset + b).filling(); }
++void TcuTbuf::promote_apf(uint32_t b)       { impl_->promote(kAOffset + b, kApfOffset + b); }
++void TcuTbuf::invalidate_apf(uint32_t b)    { impl_->buf(kApfOffset + b).invalidate(); }
++#endif
++
+ uint64_t TcuTbuf::reads() const { return impl_->reads(); }
+diff --git a/sim/simx/tcu/tcu_tbuf.h b/sim/simx/tcu/tcu_tbuf.h
+index 91d3f32..ed1a336 100644
+--- a/sim/simx/tcu/tcu_tbuf.h
++++ b/sim/simx/tcu/tcu_tbuf.h
+@@ -16,6 +16,12 @@
+ #include "types.h"
+ #include "local_mem.h"
+ 
++// Tile-buffer prefetch (VX_CFG_TCU_TBUF_PREFETCH) exists only where the tile
++// buffers do: with WGMMA.
++#if defined(VX_CFG_TCU_TBUF_PREFETCH) && defined(VX_CFG_TCU_WGMMA_ENABLE)
++#define TCU_TBUF_PREFETCH
++#endif
++
+ namespace vortex {
+ 
+ // TCU tile-buffer subsystem.
+@@ -66,6 +72,23 @@ public:
+   void invalidate_a(uint32_t b);
+   void invalidate_b();
+ 
++#ifdef TCU_TBUF_PREFETCH
++  // Prefetch buffers: a second B row, and a second A stripe per block. They
++  // fill at the lowest port priority, behind every demand fill, and a
++  // completed one is promoted into the demand buffer in place (a buffer swap,
++  // no copy). Promotion requires both buffers idle: no read pending or in
++  // flight.
++  void fill_bpf(std::vector<LmemRead> reads);
++  bool filling_bpf() const;
++  void promote_bpf();
++  void invalidate_bpf();
++
++  void fill_apf(uint32_t b, std::vector<LmemRead> reads);
++  bool filling_apf(uint32_t b) const;
++  void promote_apf(uint32_t b);
++  void invalidate_apf(uint32_t b);
++#endif
++
+   // Bank-row reads issued since the last reset (perf counter).
+   uint64_t reads() const;
+ 
+diff --git a/sim/simx/tcu/tcu_unit.cpp b/sim/simx/tcu/tcu_unit.cpp
+index d01eb59..589b0fd 100644
+--- a/sim/simx/tcu/tcu_unit.cpp
++++ b/sim/simx/tcu/tcu_unit.cpp
+@@ -14,6 +14,7 @@
+ 
+ #include <VX_types.h>
+ #include "tcu_unit.h"
++#include "tcu_tbuf.h"
+ #include "tensor_cfg.h"
+ #include "fragment_layout.h"
+ #include <rvfloats.h>
+@@ -386,6 +387,14 @@ public:
+   #ifdef VX_CFG_TCU_WGMMA_ENABLE
+     abuf_.fill(abuf_slot_t{});
+     bbuf_ = bbuf_slot_t{};
++  #endif
++  #ifdef TCU_TBUF_PREFETCH
++    abuf_pf_.fill(abuf_slot_t{});
++    abuf_pf_epoch_.fill(0);
++    a_epoch_.fill(0);
++    bbuf_pf_ = bbuf_slot_t{};
++    bbuf_pf_epoch_ = 0;
++    wg_epoch_ = 0;
+   #endif
+     cur_block_ = 0;
+   #ifdef TCU_META_ENABLE
+@@ -697,6 +706,11 @@ public:
+             if (tpuArgs.is_first_uop) {
+               in_wgmma_.at(b) = true;
+               cta_owner_a_.at(b) = this_cta;
++            #ifdef TCU_TBUF_PREFETCH
++              // A new WGMMA: prefetches made for the previous one go stale.
++              ++wg_epoch_;
++              ++a_epoch_.at(b);
++            #endif
+             }
+             if (tpuArgs.is_last_uop) {
+               in_wgmma_.at(b) = false;
+@@ -749,10 +763,18 @@ public:
+         if ((setup_fired >> b) & 1u) {
+           abuf_.at(b) = abuf_slot_t{};
+           tbuf->invalidate_a(b);
++        #ifdef TCU_TBUF_PREFETCH
++          abuf_pf_.at(b) = abuf_slot_t{};
++          tbuf->invalidate_apf(b);
++        #endif
+         }
+       }
+       bbuf_ = bbuf_slot_t{};
+       tbuf->invalidate_b();
++    #ifdef TCU_TBUF_PREFETCH
++      bbuf_pf_ = bbuf_slot_t{};
++      tbuf->invalidate_bpf();
++    #endif
+     }
+   #endif
+   }
+@@ -927,12 +949,33 @@ public:
+       bbuf_slot_t key = this->bbuf_key(r);
+       bool resident = bbuf_.valid && bbuf_.same_row(key)
+                    && (!key.kmajor || !r.is_first_uop || bbuf_.first_refetched);
++    #ifdef TCU_TBUF_PREFETCH
++      // A prefetched row of this WGMMA that is the row the WGMMA moved on to.
++      bool pf_live = (bbuf_pf_.valid || bbuf_pf_.fetching)
++                  && bbuf_pf_epoch_ == wg_epoch_
++                  && !r.is_first_uop && !r.is_sparse
++                  && bbuf_pf_.same_row(key);
++      if (!resident && pf_live && bbuf_pf_.valid && !bbuf_.fetching) {
++        tbuf->promote_bpf();
++        bbuf_ = bbuf_pf_;
++        bbuf_.valid = true;
++        bbuf_.fetching = false;
++        bbuf_.first_refetched = false;
++        bbuf_pf_ = bbuf_slot_t{};
++        resident = true;
++        DT(3, simobject_->name() << " bbuf: prefetch hit, step_k=" << r.step_k
++              << ", step_n=" << r.step_n);
++      }
++      bool wait_pf = !resident && pf_live && bbuf_pf_.fetching;
++    #else
++      bool wait_pf = false;
++    #endif
+       if (resident) {
+         ++perf_stats_.tbuf_cache_hits;
+       } else {
+         bbuf_ready = false;
+         ++perf_stats_.tbuf_stalls;
+-        if (!bbuf_.fetching) {
++        if (!bbuf_.fetching && !wait_pf) {
+           bool first_refetched = bbuf_.first_refetched;
+           bbuf_ = key;
+           bbuf_.fetching = true;
+@@ -944,6 +987,31 @@ public:
+           tbuf->fill_b(this->b_refill(r));
+         }
+       }
++    #ifdef TCU_TBUF_PREFETCH
++      // While a row of this WGMMA serves, fetch the WGMMA's next row. Only
++      // after the first uop has fired, so the prefetch carries this WGMMA's
++      // epoch.
++      if (resident && !r.is_first_uop) {
++        tbuf_req_t nr;
++        if (this->b_next_req(r, nr)) {
++          bbuf_slot_t nkey = this->bbuf_key(nr);
++          bool have = (bbuf_pf_.valid || bbuf_pf_.fetching)
++                   && bbuf_pf_epoch_ == wg_epoch_
++                   && bbuf_pf_.same_row(nkey);
++          if (!have) {
++            tbuf->invalidate_bpf();
++            bbuf_pf_ = nkey;
++            bbuf_pf_.valid = false;
++            bbuf_pf_.fetching = true;
++            bbuf_pf_.first_refetched = false;
++            bbuf_pf_epoch_ = wg_epoch_;
++            DT(3, simobject_->name() << " bbuf: prefetch step_k=" << nr.step_k
++                  << ", step_n=" << nr.step_n);
++            tbuf->fill_bpf(this->b_refill(nr));
++          }
++        }
++      }
++    #endif
+     }
+ 
+     // Per-block A buffers.
+@@ -957,12 +1025,53 @@ public:
+       }
+       bool resident = slot.valid && slot.step_k == r.step_k
+                    && (!r.first_compute() || slot.first_refetched);
++    #ifdef TCU_TBUF_PREFETCH
++      auto& pf = abuf_pf_.at(b);
++      // The prefetched k-stripe of this WGMMA is the stripe it moved on to.
++      bool pf_live = (pf.valid || pf.fetching)
++                  && abuf_pf_epoch_.at(b) == a_epoch_.at(b)
++                  && !r.first_compute() && !r.is_sparse
++                  && pf.step_k == r.step_k;
++      if (!resident && pf_live && pf.valid && !slot.fetching) {
++        tbuf->promote_apf(b);
++        slot.valid = true;
++        slot.fetching = false;
++        slot.first_refetched = false;
++        slot.step_k = r.step_k;
++        pf = abuf_slot_t{};
++        resident = true;
++        DT(3, simobject_->name() << " abuf" << b << ": prefetch hit, step_k=" << r.step_k);
++      }
++      // While a stripe serves, fetch the WGMMA's next k-stripe.
++      if (resident && !r.first_compute() && !r.is_sparse
++       && (r.step_k + 1) < wg_cfg::k_steps) {
++        bool have = (pf.valid || pf.fetching)
++                 && abuf_pf_epoch_.at(b) == a_epoch_.at(b)
++                 && pf.step_k == r.step_k + 1;
++        if (!have) {
++          tbuf_req_t nr = r;
++          nr.step_k = r.step_k + 1;
++          nr.step_m = 0;
++          nr.step_n = 0;
++          tbuf->invalidate_apf(b);
++          pf = abuf_slot_t{};
++          pf.fetching = true;
++          pf.step_k = nr.step_k;
++          abuf_pf_epoch_.at(b) = a_epoch_.at(b);
++          DT(3, simobject_->name() << " abuf" << b << ": prefetch step_k=" << nr.step_k);
++          tbuf->fill_apf(b, this->a_refill(nr));
++        }
++      }
++      bool wait_apf = !resident && pf_live && pf.fetching;
++    #else
++      bool wait_apf = false;
++    #endif
+       if (resident) {
+         continue;
+       }
+       abuf_ready.at(b) = false;
+       ++perf_stats_.tbuf_stalls;
+-      if (!slot.fetching) {
++      if (!slot.fetching && !wait_apf) {
+         slot.valid    = false;
+         slot.fetching = true;
+         slot.step_k   = r.step_k;
+@@ -1009,10 +1118,51 @@ public:
+         slot.first_refetched = false;
+       }
+     }
++  #ifdef TCU_TBUF_PREFETCH
++    if (bbuf_pf_.fetching && !tbuf->filling_bpf()) {
++      bbuf_pf_.fetching = false;
++      bbuf_pf_.valid = true;
++    }
++    for (uint32_t b = 0; b < VX_CFG_NUM_TCU_BLOCKS; ++b) {
++      auto& pf = abuf_pf_.at(b);
++      if (pf.fetching && !tbuf->filling_apf(b)) {
++        pf.fetching = false;
++        pf.valid = true;
++      }
++    }
++  #endif
+ 
+     return ready_mask;
+   }
+ 
++#ifdef TCU_TBUF_PREFETCH
++  // The first block of the B row that follows the row serving `r`, within
++  // the same WGMMA. Uops run k outer, n middle, so the WGMMA consumes its B
++  // blocks in increasing (step_k * n_steps + step_n) order. Dense only: a
++  // sparse B row follows another layout.
++  bool b_next_req(const tbuf_req_t& r, tbuf_req_t& nr) {
++    if (r.is_sparse) {
++      return false;
++    }
++    const auto& sd_b = lmem_desc_[r.wid][1];
++    bool kmajor = (sd_b.ldm != 0);
++    uint32_t n_steps = xtile_n_of(r.cd_nregs) / cfg::tcN;
++    uint32_t total = wg_cfg::k_steps * n_steps;
++    uint32_t blk = r.step_k * n_steps + r.step_n;
++    uint32_t blks = kmajor ? 1 : kBSubBlocks;
++    uint32_t next = blk - (blk % blks) + blks;
++    if (next >= total) {
++      return false;
++    }
++    nr = r;
++    nr.step_k = next / n_steps;
++    nr.step_n = next % n_steps;
++    nr.step_m = 0;
++    nr.is_first_uop = false;
++    return true;
++  }
++#endif
++
+   static uint32_t xtile_n_of(uint32_t cd_nregs) {
+     // NRC: cd_nregs 0/1/2 → 8/16/32; xtileN = NRC * NT / xtileM.
+     uint32_t nrc = (cd_nregs == 0) ? 8 : (cd_nregs == 1) ? 16 : 32;
+@@ -1679,6 +1829,19 @@ private:
+   std::array<abuf_slot_t, VX_CFG_NUM_TCU_BLOCKS> abuf_;
+   bbuf_slot_t bbuf_;
+ #endif
++#ifdef TCU_TBUF_PREFETCH
++  // Prefetch slots: the next A k-stripe of each block and the next B row of
++  // the WGMMA in progress. A prefetch is tagged with the WGMMA epoch it was
++  // issued in and is only ever promoted within that epoch: an epoch advances
++  // whenever a first compute uop fires, so a WGMMA never reads a row fetched
++  // for the previous one (whose slab the program may have rewritten).
++  std::array<abuf_slot_t, VX_CFG_NUM_TCU_BLOCKS> abuf_pf_;
++  std::array<uint64_t, VX_CFG_NUM_TCU_BLOCKS> abuf_pf_epoch_{};
++  std::array<uint64_t, VX_CFG_NUM_TCU_BLOCKS> a_epoch_{};
++  bbuf_slot_t bbuf_pf_;
++  uint64_t bbuf_pf_epoch_ = 0;
++  uint64_t wg_epoch_ = 0;
++#endif
+ };
+ 
+ ///////////////////////////////////////////////////////////////////////////////
