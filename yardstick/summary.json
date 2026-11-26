@@ -1,0 +1,268 @@
+{
+ "nvidia": [
+  {
+   "key": "t4",
+   "label": "NVIDIA T4",
+   "gen": "Turing, 2018",
+   "process": "TSMC 12 nm",
+   "sm": 40,
+   "peak": 512,
+   "small": 140.9,
+   "big": 451.7,
+   "attn_small": 115.7,
+   "attn_long": 145.2,
+   "mem_gbs": 231,
+   "mem_gbs_per_sm": 5.8,
+   "mem_limit_small": 143.0,
+   "max_clock": 1590,
+   "big_clock": 689,
+   "big_power": 69,
+   "power_limit": 70.0,
+   "big_tflops": 24.9,
+   "tflops_per_w": 0.36,
+   "die_mm2": 545,
+   "mm2_per_sm": 11.4,
+   "mtr_per_sm": 283,
+   "gpu_name": "Tesla T4",
+   "torch": "2.12.1+cu130",
+   "cuda": "13.0"
+  },
+  {
+   "key": "l4",
+   "label": "NVIDIA L4",
+   "gen": "Ada, 2023",
+   "process": "TSMC 4N (5 nm class)",
+   "sm": 58,
+   "peak": 512,
+   "small": 73.5,
+   "big": 481.7,
+   "attn_small": 100.6,
+   "attn_long": 405.3,
+   "mem_gbs": 231,
+   "mem_gbs_per_sm": 4.0,
+   "mem_limit_small": 68.5,
+   "max_clock": 2040,
+   "big_clock": 979,
+   "big_power": 72,
+   "power_limit": 72.0,
+   "big_tflops": 54.7,
+   "tflops_per_w": 0.76,
+   "die_mm2": 294.5,
+   "mm2_per_sm": 4.9,
+   "mtr_per_sm": 597,
+   "gpu_name": "NVIDIA L4",
+   "torch": "2.9.1+cu129",
+   "cuda": "12.9"
+  },
+  {
+   "key": "a100",
+   "label": "NVIDIA A100",
+   "gen": "Ampere, 2020",
+   "process": "TSMC 7 nm",
+   "sm": 108,
+   "peak": 1024,
+   "small": 222.6,
+   "big": 968.2,
+   "attn_small": 245.2,
+   "attn_long": 658.1,
+   "mem_gbs": 1379,
+   "mem_gbs_per_sm": 12.8,
+   "mem_limit_small": 231.8,
+   "max_clock": 1410,
+   "big_clock": 1251,
+   "big_power": 399,
+   "power_limit": 400.0,
+   "big_tflops": 261.6,
+   "tflops_per_w": 0.66,
+   "die_mm2": 826,
+   "mm2_per_sm": 6.5,
+   "mtr_per_sm": 423,
+   "gpu_name": "NVIDIA A100-SXM4-40GB",
+   "torch": "2.9.1+cu129",
+   "cuda": "12.9"
+  },
+  {
+   "key": "h100",
+   "label": "NVIDIA H100",
+   "gen": "Hopper, 2022",
+   "process": "TSMC 4N (5 nm class)",
+   "sm": 132,
+   "peak": 2048,
+   "small": 282.0,
+   "big": 1888.5,
+   "attn_small": 278.2,
+   "attn_long": 1460.0,
+   "mem_gbs": 3013,
+   "mem_gbs_per_sm": 22.8,
+   "mem_limit_small": 295.1,
+   "max_clock": 1980,
+   "big_clock": 1294,
+   "big_power": 698,
+   "power_limit": 700.0,
+   "big_tflops": 645.2,
+   "tflops_per_w": 0.92,
+   "die_mm2": 814,
+   "mm2_per_sm": 5.7,
+   "mtr_per_sm": 556,
+   "gpu_name": "NVIDIA H100 80GB HBM3",
+   "torch": "2.9.1+cu129",
+   "cuda": "12.9"
+  }
+ ],
+ "formats": {
+  "fp16": {
+   "t4": {
+    "v": 448.8,
+    "peak": 512,
+    "pct": 88
+   },
+   "l4": {
+    "v": 476.1,
+    "peak": 512,
+    "pct": 93
+   },
+   "a100": {
+    "v": 894.4,
+    "peak": 1024,
+    "pct": 87
+   },
+   "h100": {
+    "v": 1851.0,
+    "peak": 2048,
+    "pct": 90
+   }
+  },
+  "fp32": {
+   "t4": {
+    "v": 61.7,
+    "peak": 64,
+    "pct": 96
+   },
+   "l4": {
+    "v": 93.0,
+    "peak": 128,
+    "pct": 73
+   },
+   "a100": {
+    "v": 62.4,
+    "peak": 64,
+    "pct": 98
+   },
+   "h100": {
+    "v": 99.0,
+    "peak": 128,
+    "pct": 77
+   }
+  },
+  "int8": {
+   "t4": {
+    "v": 215.2,
+    "peak": 1024,
+    "pct": 21
+   },
+   "l4": {
+    "v": 245.4,
+    "peak": 1024,
+    "pct": 24
+   },
+   "a100": {
+    "v": 235.5,
+    "peak": 2048,
+    "pct": 12
+   },
+   "h100": {
+    "v": 248.1,
+    "peak": 4096,
+    "pct": 6
+   }
+  },
+  "bf16": {
+   "l4": {
+    "v": 475.3,
+    "peak": 512,
+    "pct": 93
+   },
+   "a100": {
+    "v": 887.8,
+    "peak": 1024,
+    "pct": 87
+   },
+   "h100": {
+    "v": 1859.9,
+    "peak": 2048,
+    "pct": 91
+   }
+  },
+  "tf32": {
+   "l4": {
+    "v": 245.0,
+    "peak": 256,
+    "pct": 96
+   },
+   "a100": {
+    "v": 447.2,
+    "peak": 512,
+    "pct": 87
+   },
+   "h100": {
+    "v": 887.7,
+    "peak": 1024,
+    "pct": 87
+   }
+  },
+  "fp8": {
+   "l4": {
+    "v": 892.7,
+    "peak": 1024,
+    "pct": 87
+   },
+   "h100": {
+    "v": 3321.4,
+    "peak": 4096,
+    "pct": 81
+   }
+  }
+ },
+ "ours": {
+  "peak": 1024,
+  "small_original": 38.6,
+  "small": 73.9,
+  "small_best_sim": 77.6,
+  "job_256": 74.8,
+  "attn_small_nt16": 0.123,
+  "attn_small_nt32": 0.062,
+  "attn_instructions_nt16": 5694007,
+  "fmax_mhz": 840,
+  "process": "ASAP7 (academic 7 nm-class model)",
+  "cells": 3328530,
+  "ffs": 502717,
+  "macros": 16,
+  "logic_by_unit": [
+   [
+    "General floating-point unit",
+    1891766
+   ],
+   [
+    "AI (tensor) unit",
+    529703
+   ],
+   [
+    "Instruction issue",
+    324148
+   ],
+   [
+    "Integer unit",
+    282830
+   ],
+   [
+    "Load / store",
+    154602
+   ],
+   [
+    "Other",
+    145481
+   ]
+  ],
+  "sim_memory_gbs": 460
+ }
+}

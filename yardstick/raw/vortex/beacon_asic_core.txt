@@ -1,0 +1,78 @@
+{
+  "tool": "beacon_asic",
+  "env": {
+    "circt": "CIRCT 892a65a01",
+    "foldsim": "foldsim d8350bc0f",
+    "pdk": "asap7",
+    "xlen": 32
+  },
+  "tolerance": 0.05,
+  "metric_thresholds": {
+    "fmax_mhz": 0.32
+  },
+  "gated": [
+    "ff",
+    "cells"
+  ],
+  "against": null,
+  "builds": [
+    {
+      "id": "core",
+      "group": "core",
+      "dut": "core",
+      "clock_mhz": 1000,
+      "configs": "-DVX_CFG_NUM_THREADS=8 -DVX_CFG_NUM_WARPS=8 -DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE",
+      "config_hash": "39bd327489d72d1c",
+      "thresholds": {},
+      "known_issue": "",
+      "metrics": {
+        "fmax_mhz": 839.6,
+        "period_ps": 1191,
+        "max_stages": 40,
+        "cells": 3328530,
+        "ff": 502717,
+        "macros": 16,
+        "endpoints": 264678,
+        "stage_ps": 24,
+        "overhead_ps": 231,
+        "build_time_s": 105,
+        "tied_bits": 5,
+        "tied_ports": [
+          {
+            "port": "core.core_id",
+            "bits": 1,
+            "width": 1
+          },
+          {
+            "port": "core.dcache_path_drained",
+            "bits": 1,
+            "width": 1
+          },
+          {
+            "port": "core.dxa_lmem_bus_if_req_valid",
+            "bits": 1,
+            "width": 1
+          },
+          {
+            "port": "core.dxa_lmem_bus_if_rsp_ready",
+            "bits": 1,
+            "width": 1
+          },
+          {
+            "port": "core.dxa_req_bus_if_req_ready",
+            "bits": 1,
+            "width": 1
+          }
+        ]
+      },
+      "baseline": {},
+      "baseline_config_hash": "847ad31605be03dd",
+      "error": null,
+      "verdict": "NO-BASELINE",
+      "reasons": [
+        "no recorded baseline (run --update-baseline)"
+      ],
+      "xlen": 32
+    }
+  ]
+}

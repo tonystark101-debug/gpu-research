@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Our core vs four NVIDIA chips</title>
+<style>
+  .viz-root {
+    --surf: var(--card, #fcfcfb);
+    --ink: var(--foreground, #0b0b0b);
+    --ink2: var(--muted-foreground, #52514e);
+    --muted: #898781;
+    --line: var(--border, rgba(11,11,11,.10));
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --ours: #2a78d6;
+    --ours-track: #cde2fb;
+    --nv: #898781;
+    --nv-track: #e1e0d9;
+    --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100; --c5: #e87ba4; --other: #898781;
+    --lw: 86px;
+    font-family: var(--font-sans, system-ui, -apple-system, "Segoe UI", sans-serif);
+    color: var(--ink);
+    line-height: 1.45;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .viz-root[data-mode="dark"] {
+    --surf: var(--card, #1a1a19);
+    --ink: var(--foreground, #f0efec);
+    --ink2: var(--muted-foreground, #c3c2b7);
+    --line: var(--border, rgba(255,255,255,.10));
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --ours: #3987e5;
+    --ours-track: #104281;
+    --nv-track: #383835;
+    --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181;
+  }
+  * { box-sizing: border-box; }
+  .intro { font-size: 13.5px; color: var(--ink2); margin: 0; }
+  .intro b { color: var(--ink); }
+
+  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .tile { background: var(--surf); border: 1px solid var(--line); border-radius: var(--radius, 12px); padding: 12px 14px; }
+  .t-value { font-size: 24px; font-weight: 650; line-height: 1.15; }
+  .t-label { font-size: 12px; color: var(--ink2); margin-top: 5px; }
+
+  .card { background: var(--surf); border: 1px solid var(--line); border-radius: var(--radius, 12px); padding: 16px 18px; }
+  h2 { font-size: 15px; font-weight: 650; margin: 0 0 4px; line-height: 1.35; }
+  .sub { font-size: 12.5px; color: var(--ink2); margin: 0 0 10px; }
+  .note { font-size: 12.5px; color: var(--ink2); margin: 12px 0 0; }
+  .note b { color: var(--ink); font-weight: 650; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink2); margin: 0 0 10px; }
+  .sw { display: inline-block; width: 12px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 6px; }
+  .sw.mk { width: 2px; height: 12px; border-radius: 1px; background: var(--ink); vertical-align: -2px; }
+
+  .multiples { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 26px; }
+  .p-title { font-size: 12.5px; font-weight: 650; }
+  .p-sub { font-size: 11.5px; color: var(--ink2); margin-bottom: 6px; }
+  .rows { position: relative; }
+  .gridlayer { position: absolute; top: 0; bottom: 0; left: var(--lw); right: 0; pointer-events: none; }
+  .gl { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--grid); }
+  .gl.base { background: var(--axis); }
+  .row { display: grid; grid-template-columns: var(--lw) minmax(0, 1fr); align-items: center; height: 30px; position: relative; }
+  .r-label { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 8px; }
+  .row.ours .r-label { font-weight: 650; }
+  .r-plot { position: relative; height: 100%; outline: none; }
+  .r-plot:focus-visible { box-shadow: inset 0 0 0 2px var(--ours); border-radius: 4px; }
+  .track, .fill { position: absolute; left: 0; top: 50%; height: 12px; margin-top: -6px; border-radius: 0 4px 4px 0; }
+  .track { background: var(--nv-track); }
+  .fill { background: var(--nv); }
+  .row.ours .track { background: var(--ours-track); }
+  .row.ours .fill { background: var(--ours); }
+  .r-plot:hover .fill, .r-plot:focus .fill { filter: brightness(1.15); }
+  .marker { position: absolute; top: 50%; height: 20px; margin-top: -10px; width: 2px; margin-left: -1px; background: var(--ink); border-radius: 1px; }
+  .val { position: absolute; top: 50%; transform: translateY(-50%); font-size: 11.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .val .pct { color: var(--ink2); }
+  .val.empty { color: var(--ink2); font-style: italic; }
+  .axis { position: relative; margin-left: var(--lw); height: 18px; margin-top: 2px; }
+  .axis span { position: absolute; top: 2px; font-size: 10.5px; color: var(--muted); transform: translateX(-50%); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .axis span.first { transform: none; }
+  .axis-name { font-size: 10.5px; color: var(--muted); margin-left: var(--lw); }
+
+  .tablewrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  th, td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; vertical-align: top; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { font-size: 11.5px; color: var(--ink2); font-weight: 650; }
+  td .pct { color: var(--ink2); font-size: 11px; margin-left: 3px; }
+  td .what { display: block; color: var(--ink2); font-size: 11px; }
+  td.none { color: var(--muted); }
+  th.us, td.us { background: color-mix(in srgb, var(--ours) 9%, transparent); }
+
+  .seg { display: flex; gap: 2px; height: 28px; margin: 6px 0 8px; }
+  .seg > div { border-radius: 4px; display: flex; align-items: center; padding-left: 6px; font-size: 11.5px; font-weight: 650; color: #fff; white-space: nowrap; overflow: visible; outline: none; }
+  .seg > div.ink-dark { color: #0b0b0b; }
+  .seg > div:hover, .seg > div:focus { filter: brightness(1.12); }
+  .seg-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink2); }
+  .two { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px 26px; align-items: start; }
+  .facts { font-size: 12.5px; margin: 0; padding-left: 18px; }
+  .facts li { margin: 3px 0; }
+
+  ol.steps, ul.lessons { margin: 0; padding-left: 20px; font-size: 13px; }
+  ol.steps li, ul.lessons li { margin: 6px 0; }
+  .time { color: var(--ink2); }
+  .lead { border-left: 4px solid var(--ours); }
+
+  details > summary { cursor: pointer; font-size: 14px; font-weight: 650; }
+  details[open] > summary { margin-bottom: 10px; }
+  .src { font-size: 11px; color: var(--ink2); }
+
+  .tip { position: absolute; z-index: 20; pointer-events: none; display: none; background: var(--popover, var(--surf)); color: var(--popover-foreground, var(--ink));
+         border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-size: 12px; max-width: 270px; box-shadow: 0 4px 14px rgba(0,0,0,.14);
+         font-family: var(--font-sans, system-ui, -apple-system, "Segoe UI", sans-serif); line-height: 1.4; }
+  .tip .tv { font-weight: 650; font-size: 13px; }
+  .tip .tl { color: var(--muted-foreground, #52514e); display: flex; align-items: center; gap: 6px; }
+  .tip .key { display: inline-block; width: 12px; height: 2px; border-radius: 1px; flex: none; }
+
+  @media (max-width: 700px) {
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .multiples, .two { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="viz-root" id="root">
+
+  <p class="intro">The same jobs on <b>our core</b> and on <b>four NVIDIA chips</b> from 2018 to 2023, counted the fair way: <b>work per clock tick, for one core</b>. A core is the repeated building block of a GPU; NVIDIA calls it an SM.</p>
+
+  <div class="kpis" id="kpis"></div>
+
+  <section class="card">
+    <h2>Big jobs: NVIDIA runs at 88–95% of its maximum. Small jobs: every chip falls far short.</h2>
+    <p class="sub">Multiplying grids of numbers, the core of AI maths. Multiply-adds per clock tick, for one core.</p>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--ours)"></span>Our core</span>
+      <span><span class="sw" style="background:var(--nv)"></span>NVIDIA core</span>
+      <span><span class="sw" style="background:var(--nv-track);box-shadow:inset 0 0 0 1px var(--axis)"></span>pale bar: its maximum on paper</span>
+    </div>
+    <div class="multiples" id="matrix"></div>
+    <p class="note"><b>Our fix took our core from 39 to 74:</b> level with an L4 core and about half a T4 core, the Turing chip our plan targets. We can't simulate big jobs yet. On our largest run (256 × 256 × 256) we stay at 75, while a T4 core does 271 on the same size.</p>
+  </section>
+
+  <section class="card">
+    <h2>Why small jobs fall short: memory. Every NVIDIA core sits right at its memory's speed limit.</h2>
+    <div class="multiples" id="memory"></div>
+    <p class="note">A small job needs a lot of data for little maths, so memory sets the pace, not the AI unit. The L4 edges past its line because its large on-chip cache (48 MB) holds some of the data. <b>Our simulator gives our one core 20–115× more memory speed than an NVIDIA core gets,</b> so our small-job result is flattered until we re-test it on realistic memory.</p>
+  </section>
+
+  <section class="card">
+    <h2>Attention, the heart of AI chat models, is our biggest gap: 800–2,300× behind.</h2>
+    <p class="sub">Multiply-adds per clock tick, for one core.</p>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--ours)"></span>Our core</span>
+      <span><span class="sw" style="background:var(--nv)"></span>NVIDIA core</span>
+    </div>
+    <div class="multiples" id="attention"></div>
+    <p class="note">Our attention test runs 5.7 million ordinary instructions to do 2.1 million multiply-adds, so our AI unit spends almost all its time waiting. NVIDIA gets much faster on long text, up to 1,460 per clock. We haven't run long text yet.</p>
+  </section>
+
+  <section class="card">
+    <h2>Smaller numbers, more work: 8-bit maths nearly doubles the work per clock on chips built for it.</h2>
+    <p class="sub">Big job (4,096 × 4,096 × 4,096). Multiply-adds per clock tick, for one core, with the share of its maximum in grey. A dash means the chip has no hardware for that format.</p>
+    <div class="tablewrap"><table id="formats"></table></div>
+    <p class="note">The AI unit is 5–19× faster than the general maths cores (the fp32 row). <b>int8 came out almost the same on all four chips</b>, whatever their hardware can do, so the limit is the software route we used, not the chips: software matters even for NVIDIA. Our core: only fp16 tested so far.</p>
+  </section>
+
+  <section class="card">
+    <h2>Under heavy load, power sets the pace, not top speed.</h2>
+    <div class="multiples" id="power"></div>
+    <p class="note">To stay inside its power limit, a T4 slows to 43% of its top speed on a big job; even an H100 slows to 65%. Work per watt (TFLOPS: trillions of maths operations a second) rose 2.6× from the T4 (2018) to the H100 (2022). Our core's predicted top speed is 840 MHz, but that's on an academic 7 nm-class model, not a real factory's process. Its power isn't known yet.</p>
+  </section>
+
+  <section class="card">
+    <h2>Our core's size can't be compared yet, but we know where its logic goes.</h2>
+    <div class="two">
+      <div>
+        <div class="p-title">Our core's logic, by part</div>
+        <div class="p-sub">Share of 3.3 million logic cells, from Vortex's own estimator</div>
+        <div class="seg" id="seg" role="img"></div>
+        <div class="seg-legend" id="segLegend"></div>
+        <ul class="facts" style="margin-top:10px">
+          <li>3.3 million logic cells, 0.5 million flip-flops (1-bit memory cells) and 16 memory blocks.</li>
+          <li>Predicted top speed: 840 MHz on the academic 7 nm-class model.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="p-title">For scale: NVIDIA, whole chip ÷ number of cores</div>
+        <div class="p-sub">From NVIDIA's published chip sizes</div>
+        <div class="tablewrap"><table id="sizes"></table></div>
+      </div>
+    </div>
+    <p class="note"><b>57% of our core is general floating-point maths; the AI unit is only 16%.</b> An AI-first core would shift that balance. To compare with NVIDIA in square millimetres and watts, we need a full layout run of our core.</p>
+  </section>
+
+  <section class="card lead">
+    <h2>What this tells us</h2>
+    <ul class="lessons">
+      <li><b>The yardstick works.</b> NVIDIA's chips hit 88–95% of their published maximum on big jobs, so these numbers can be trusted.</li>
+      <li><b>Against a Turing core, our plan's target:</b> 1.9× behind on small jobs, 3.6× on medium ones, and about 940× on attention.</li>
+      <li><b>Small jobs are a memory race for everyone.</b> Feeding data matters more than adding maths units, which fits our data-movement bet.</li>
+      <li><b>Power, not clock speed, limits real chips.</b> Work per watt is the number to design for.</li>
+    </ul>
+    <h2 style="margin-top:14px">Next, in this order</h2>
+    <ol class="steps">
+      <li><b>Attention.</b> Find where our attention test's time goes, then fix the biggest piece. <span class="time">About 1–2 days.</span></li>
+      <li><b>Realistic memory.</b> Re-run our core with a real chip's share of memory, so the small-job result is fair. <span class="time">About half a day.</span></li>
+      <li><b>Size and power.</b> A full layout run of our core, to get square millimetres and watts. <span class="time">About 1–2 days of cloud computing.</span></li>
+    </ol>
+  </section>
+
+  <details class="card">
+    <summary>All the numbers</summary>
+    <div class="tablewrap"><table id="all"></table></div>
+  </details>
+
+  <div class="src">
+    NVIDIA: measured 26 Nov 2026 on rented cloud GPUs (Amazon: T4; Google: L4, A100, H100) through PyTorch 2.9–2.12, which runs NVIDIA's own maths and attention code. Clock and power sampled every 50 ms during each test. Maximums are NVIDIA's published figures (no sparsity tricks). Our core: Vortex in its cycle simulator (32 threads × 8 warps, issue width 4, AI unit and copy engine on, with our fix from PR #506). Size and top speed: Vortex's Beacon estimator on the ASAP7 academic 7 nm-class model. Chip sizes and transistor counts: NVIDIA's published figures, divided by each chip's full core count.
+  </div>
+</div>
+
+<script>
+const root = document.getElementById('root');
+
+// ------------------------------------------------------------ light / dark
+function luma(css) {
+  const c = document.createElement('canvas'); c.width = c.height = 1;
+  const x = c.getContext('2d');
+  x.fillStyle = '#808080';
+  x.fillStyle = css;
+  x.fillRect(0, 0, 1, 1);
+  const d = x.getImageData(0, 0, 1, 1).data;
+  return d[3] < 10 ? null : 0.2126 * d[0] + 0.7152 * d[1] + 0.0722 * d[2];
+}
+function setMode() {
+  const cs = getComputedStyle(document.documentElement);
+  let l = luma(cs.backgroundColor);
+  if (l === null) l = luma(cs.getPropertyValue('--background').trim() || 'transparent');
+  if (l === null) l = matchMedia('(prefers-color-scheme: dark)').matches ? 0 : 255;
+  root.dataset.mode = l < 128 ? 'dark' : 'light';
+}
+setMode();
+new MutationObserver(setMode).observe(document.documentElement, { attributes: true });
+new MutationObserver(setMode).observe(document.head, { childList: true, subtree: true, characterData: true });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setMode);
+
+// ------------------------------------------------------------------- data
+const ORDER = ['ours', 't4', 'l4', 'a100', 'h100'];
+const NAME = { ours: 'Our core', t4: 'T4 (2018)', l4: 'L4 (2023)', a100: 'A100 (2020)', h100: 'H100 (2022)' };
+const PEAK = { ours: 1024, t4: 512, l4: 512, a100: 1024, h100: 2048 };
+const D = {
+  big:      { ours: null, t4: 451.7, l4: 481.7, a100: 968.2, h100: 1888.5 },
+  small:    { ours: 73.9, t4: 140.9, l4: 73.5, a100: 222.6, h100: 282.0 },
+  mid:      { ours: 74.8, t4: 271.2, l4: 148.1, a100: 329.3, h100: 541.5 },
+  memLimit: { t4: 143.0, l4: 68.5, a100: 231.8, h100: 295.1 },
+  memCore:  { ours: 460, t4: 5.8, l4: 4.0, a100: 12.8, h100: 22.8 },
+  memChip:  { ours: 460, t4: 231, l4: 231, a100: 1379, h100: 3013 },
+  attS:     { ours: 0.123, t4: 115.7, l4: 100.6, a100: 245.2, h100: 278.2 },
+  attL:     { ours: null, t4: 145.2, l4: 405.3, a100: 658.1, h100: 1460.0 },
+  topClk:   { ours: 840, t4: 1590, l4: 2040, a100: 1410, h100: 1980 },
+  bigClk:   { ours: null, t4: 689, l4: 979, a100: 1251, h100: 1294 },
+  bigW:     { ours: null, t4: 69, l4: 72, a100: 399, h100: 698 },
+  tfw:      { ours: null, t4: 0.36, l4: 0.76, a100: 0.66, h100: 0.92 },
+  cores:    { ours: 1, t4: 40, l4: 58, a100: 108, h100: 132 },
+  mm2:      { t4: 11.4, l4: 4.9, a100: 6.5, h100: 5.7 },
+  mtr:      { t4: 283, l4: 597, a100: 423, h100: 556 },
+  proc:     { ours: 'ASAP7 model (7 nm class)', t4: 'TSMC 12 nm', l4: 'TSMC 4N (5 nm class)', a100: 'TSMC 7 nm', h100: 'TSMC 4N (5 nm class)' },
+};
+const FORMATS = [
+  ['fp32', '32-bit, general maths cores', { t4: [61.7, 64], l4: [93.0, 128], a100: [62.4, 64], h100: [99.0, 128] }],
+  ['tf32', '19-bit, AI unit', { l4: [245.0, 256], a100: [447.2, 512], h100: [887.7, 1024] }],
+  ['fp16', '16-bit, AI unit', { t4: [448.8, 512], l4: [476.1, 512], a100: [894.4, 1024], h100: [1851.0, 2048] }],
+  ['bf16', '16-bit with a wider range, AI unit', { l4: [475.3, 512], a100: [887.8, 1024], h100: [1860.0, 2048] }],
+  ['fp8', '8-bit, AI unit', { l4: [892.7, 1024], h100: [3321.4, 4096] }],
+  ['int8', '8-bit whole numbers, AI unit', { t4: [215.2, 1024], l4: [245.4, 1024], a100: [235.5, 2048], h100: [248.1, 4096] }],
+];
+const PARTS = [
+  ['General floating-point unit', 1891766, '--c1', false],
+  ['AI (tensor) unit', 529703, '--c2', false],
+  ['Instruction issue', 324148, '--c3', false],
+  ['Integer unit', 282830, '--c4', true],
+  ['Load / store', 154602, '--c5', false],
+  ['Other', 145481, '--other', false],
+];
+
+// ---------------------------------------------------------------- helpers
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+function num(v) {
+  if (v == null) return '';
+  if (v === 0) return '0';
+  if (v < 1) return v.toFixed(2);
+  if (v < 10) return v.toFixed(1).replace(/\.0$/, '');
+  return Math.round(v).toLocaleString('en-US');
+}
+const pct = (a, b) => Math.round(100 * a / b) + '%';
+
+// one tooltip for the page
+const tip = el('div', 'tip');
+document.body.appendChild(tip);
+function tipShow(target, x, y) {
+  tip.replaceChildren();
+  tip.append(el('div', 'tv', target.dataset.tv));
+  const l = el('div', 'tl');
+  const k = el('span', 'key');
+  k.style.background = target.dataset.key || 'var(--nv)';
+  l.append(k, el('span', null, target.dataset.tl));
+  tip.append(l);
+  tip.style.display = 'block';
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  const maxX = document.documentElement.clientWidth + window.scrollX - w - 4;
+  tip.style.left = Math.max(4, Math.min(x + 12, maxX)) + 'px';
+  tip.style.top = Math.max(4, y - h - 10) + 'px';
+}
+function tipHide() { tip.style.display = 'none'; }
+function hover(target, tv, tl, key) {
+  target.dataset.tv = tv;
+  target.dataset.tl = tl;
+  if (key) target.dataset.key = key;
+  target.tabIndex = 0;
+  target.setAttribute('aria-label', tv + '. ' + tl);
+  target.addEventListener('pointermove', e => tipShow(target, e.pageX, e.pageY));
+  target.addEventListener('pointerleave', tipHide);
+  target.addEventListener('focus', () => {
+    const r = target.getBoundingClientRect();
+    tipShow(target, r.left + window.scrollX + r.width / 3, r.top + window.scrollY);
+  });
+  target.addEventListener('blur', tipHide);
+}
+
+// bar panel: rows of {key, value, track, marker, label, pctText, empty, tv, tl}
+function panel(host, cfg) {
+  const reserve = cfg.reserve || 84;
+  const at = v => `calc((100% - ${reserve}px) * ${Math.min(v, cfg.max) / cfg.max})`;
+  const p = el('div', 'panel');
+  if (cfg.title) p.append(el('div', 'p-title', cfg.title));
+  if (cfg.sub) p.append(el('div', 'p-sub', cfg.sub));
+  if (cfg.legend) p.append(cfg.legend);
+  const rows = el('div', 'rows');
+  const gl = el('div', 'gridlayer');
+  cfg.ticks.forEach((t, i) => { const g = el('div', 'gl' + (i === 0 ? ' base' : '')); g.style.left = at(t); gl.append(g); });
+  rows.append(gl);
+  for (const r of cfg.rows) {
+    const row = el('div', 'row' + (r.key === 'ours' ? ' ours' : ''));
+    row.append(el('div', 'r-label', NAME[r.key]));
+    const plot = el('div', 'r-plot');
+    if (r.track != null) { const t = el('div', 'track'); t.style.width = at(r.track); plot.append(t); }
+    if (r.value != null) { const f = el('div', 'fill'); f.style.width = at(Math.max(r.value, cfg.max * 0.004)); plot.append(f); }
+    if (r.marker != null) { const m = el('div', 'marker'); m.style.left = at(r.marker); plot.append(m); }
+    const lab = el('span', 'val' + (r.value == null ? ' empty' : ''));
+    if (r.value == null) {
+      lab.textContent = r.empty;
+      lab.style.left = '6px';
+    } else {
+      lab.append(document.createTextNode(r.label != null ? r.label : num(r.value)));
+      if (r.pctText) lab.append(el('span', 'pct', ' · ' + r.pctText));
+      const edge = Math.max(r.value, r.marker || 0);
+      lab.style.left = `calc(${at(edge)} + ${r.marker != null && r.marker >= r.value ? 7 : 5}px)`;
+    }
+    plot.append(lab);
+    if (r.tv) hover(plot, r.tv, r.tl, r.key === 'ours' ? 'var(--ours)' : 'var(--nv)');
+    row.append(plot);
+    rows.append(row);
+  }
+  p.append(rows);
+  const ax = el('div', 'axis');
+  cfg.ticks.forEach((t, i) => { const s = el('span', i === 0 ? 'first' : null, cfg.tickFmt ? cfg.tickFmt(t) : num(t)); s.style.left = at(t); ax.append(s); });
+  p.append(ax);
+  if (cfg.axisName) p.append(el('div', 'axis-name', cfg.axisName));
+  host.append(p);
+}
+function legend(items) {
+  const lg = el('div', 'legend');
+  for (const [style, text, marker] of items) {
+    const s = el('span');
+    const sw = el('span', 'sw' + (marker ? ' mk' : ''));
+    if (style) sw.setAttribute('style', style);
+    s.append(sw, document.createTextNode(text));
+    lg.append(s);
+  }
+  return lg;
+}
+
+// ------------------------------------------------------------------ KPIs
+const KPIS = [
+  ['88–95%', 'of their published maximum: what NVIDIA’s chips reach on a big job, so the yardstick is sound'],
+  ['1.9×', 'behind a Turing core (T4, our plan’s target) on a small matrix job: 74 vs 141 per clock'],
+  ['~940×', 'behind a Turing core on attention: 0.12 vs 116 per clock, our biggest hole'],
+  ['96–107%', 'of what memory can feed: where NVIDIA’s cores sit on small jobs'],
+];
+const kp = document.getElementById('kpis');
+for (const [v, l] of KPIS) { const t = el('div', 'tile'); t.append(el('div', 't-value', v), el('div', 't-label', l)); kp.append(t); }
+
+// ------------------------------------------------------- 1. matrix maths
+const TICKS_2K = [0, 500, 1000, 1500, 2000];
+const matrix = document.getElementById('matrix');
+panel(matrix, {
+  title: 'Big job', sub: '8,192 × 8,192 × 8,192 grid of numbers', max: 2048, ticks: TICKS_2K,
+  rows: ORDER.map(k => k === 'ours'
+    ? { key: k, track: PEAK[k], value: null, empty: 'not run yet: too big to simulate',
+        tv: 'Not run yet', tl: 'Our core, maximum on paper 1,024. Too big to simulate; our largest run (256³) did 75.' }
+    : { key: k, track: PEAK[k], value: D.big[k], pctText: pct(D.big[k], PEAK[k]),
+        tv: num(D.big[k]) + ' per clock', tl: NAME[k] + ': ' + pct(D.big[k], PEAK[k]) + ' of its ' + num(PEAK[k]) + ' maximum' }),
+});
+panel(matrix, {
+  title: 'Small job', sub: '128 × 128 × 256: the size our core runs', max: 2048, ticks: TICKS_2K,
+  rows: ORDER.map(k => ({ key: k, track: PEAK[k], value: D.small[k], pctText: pct(D.small[k], PEAK[k]),
+    tv: num(D.small[k]) + ' per clock',
+    tl: NAME[k] + ': ' + pct(D.small[k], PEAK[k]) + ' of its ' + num(PEAK[k]) + ' maximum' + (k === 'ours' ? '. Was 39 before our fix.' : '') })),
+});
+
+// ----------------------------------------------------------- 2. memory
+const memory = document.getElementById('memory');
+panel(memory, {
+  title: 'Small job vs memory’s limit', sub: 'Multiply-adds per clock tick, for one core',
+  legend: legend([['background:var(--nv)', 'what the core did'], [null, 'most its memory can feed', true]]),
+  max: 300, ticks: [0, 100, 200, 300], reserve: 78,
+  rows: ORDER.filter(k => k !== 'ours').map(k => ({ key: k, value: D.small[k], marker: D.memLimit[k],
+    pctText: pct(D.small[k], D.memLimit[k]),
+    tv: num(D.small[k]) + ' per clock', tl: NAME[k] + ': memory can feed ' + num(D.memLimit[k]) + ', so it ran at ' + pct(D.small[k], D.memLimit[k]) + ' of that limit' })),
+});
+panel(memory, {
+  title: 'Memory speed for one core', sub: 'GB/s. Ours is the simulator’s setting, not a measurement',
+  legend: legend([['background:var(--ours)', 'our simulator'], ['background:var(--nv)', 'NVIDIA, measured']]),
+  max: 460, ticks: [0, 100, 200, 300, 400], reserve: 70,
+  rows: ORDER.map(k => ({ key: k, value: D.memCore[k], label: k === 'ours' ? '460' : num(D.memCore[k]),
+    tv: num(D.memCore[k]) + ' GB/s for one core',
+    tl: k === 'ours' ? 'Our simulator’s memory setting: a mid-size GPU’s whole memory, for one core'
+                     : NAME[k] + ': ' + num(D.memChip[k]) + ' GB/s shared by ' + D.cores[k] + ' cores' })),
+});
+
+// -------------------------------------------------------- 3. attention
+const attention = document.getElementById('attention');
+panel(attention, {
+  title: 'Short text', sub: '128 tokens: our test size', max: 1500, ticks: [0, 500, 1000, 1500],
+  rows: ORDER.map(k => ({ key: k, value: D.attS[k], label: num(D.attS[k]),
+    tv: num(D.attS[k]) + ' per clock',
+    tl: k === 'ours' ? 'Our core (16-thread setup; the 32-thread setup did 0.06). About ' + Math.round(D.attS.t4 / D.attS.ours) + '× below a T4 core.'
+                     : NAME[k] + ': ' + Math.round(D.attS[k] / D.attS.ours).toLocaleString('en-US') + '× our core' })),
+});
+panel(attention, {
+  title: 'Long text', sub: '4,096 tokens, as in a long chat', max: 1500, ticks: [0, 500, 1000, 1500],
+  rows: ORDER.map(k => k === 'ours'
+    ? { key: k, value: null, empty: 'not run yet', tv: 'Not run yet', tl: 'Our core: long text not simulated yet' }
+    : { key: k, value: D.attL[k], tv: num(D.attL[k]) + ' per clock', tl: NAME[k] + ': ' + pct(D.attL[k], PEAK[k]) + ' of its ' + num(PEAK[k]) + ' maximum' }),
+});
+
+// ---------------------------------------------------------- 4. formats
+(function formats() {
+  const t = document.getElementById('formats');
+  const head = el('thead'); const hr = el('tr');
+  hr.append(el('th', null, 'Number format'));
+  for (const k of ORDER.slice(1)) hr.append(el('th', null, NAME[k]));
+  head.append(hr); t.append(head);
+  const body = el('tbody');
+  for (const [f, what, vals] of FORMATS) {
+    const tr = el('tr');
+    const c0 = el('td'); c0.append(el('b', null, f), el('span', 'what', what)); tr.append(c0);
+    for (const k of ORDER.slice(1)) {
+      const v = vals[k];
+      if (!v) { tr.append(el('td', 'none', '—')); continue; }
+      const td = el('td'); td.append(document.createTextNode(num(v[0])), el('span', 'pct', pct(v[0], v[1])));
+      tr.append(td);
+    }
+    body.append(tr);
+  }
+  t.append(body);
+})();
+
+// ------------------------------------------------------ 5. power / clock
+const power = document.getElementById('power');
+panel(power, {
+  title: 'Clock speed', sub: 'MHz. Pale bar: top speed. Solid bar: speed during the big job',
+  max: 2100, ticks: [0, 500, 1000, 1500, 2000], reserve: 70,
+  rows: ORDER.map(k => k === 'ours'
+    ? { key: k, track: D.topClk[k], value: null, empty: 'top 840, predicted',
+        tv: '840 MHz predicted top speed', tl: 'Our core, on the academic 7 nm-class model. Not measured under load.' }
+    : { key: k, track: D.topClk[k], value: D.bigClk[k], pctText: pct(D.bigClk[k], D.topClk[k]),
+        tv: num(D.bigClk[k]) + ' MHz under load', tl: NAME[k] + ': top ' + num(D.topClk[k]) + ' MHz, held to ' + pct(D.bigClk[k], D.topClk[k]) + ' at ' + D.bigW[k] + ' W' }),
+});
+panel(power, {
+  title: 'Work per watt', sub: 'TFLOPS per watt during the big job',
+  max: 1.0, ticks: [0, 0.25, 0.5, 0.75, 1.0], reserve: 44, tickFmt: v => v === 0 ? '0' : v.toFixed(2).replace(/0$/, ''),
+  rows: ORDER.map(k => k === 'ours'
+    ? { key: k, value: null, empty: 'not known yet', tv: 'Not known yet', tl: 'Our core: needs a full layout run to estimate power' }
+    : { key: k, value: D.tfw[k], label: D.tfw[k].toFixed(2),
+        tv: D.tfw[k].toFixed(2) + ' TFLOPS per watt', tl: NAME[k] + ': ' + D.bigW[k] + ' W for the whole board' }),
+});
+
+// ------------------------------------------------------------- 6. size
+(function size() {
+  const total = PARTS.reduce((s, p) => s + p[1], 0);
+  const seg = document.getElementById('seg');
+  const lg = document.getElementById('segLegend');
+  seg.setAttribute('aria-label', 'Our core’s logic: ' + PARTS.map(p => p[0] + ' ' + pct(p[1], total)).join(', '));
+  for (const [name, v, color, darkInk] of PARTS) {
+    const b = el('div', darkInk && root.dataset.mode !== 'dark' ? 'ink-dark' : null, pct(v, total));
+    b.style.flex = String(v);
+    b.style.background = 'var(' + color + ')';
+    hover(b, pct(v, total) + ' of the logic', name + ': ' + (v / 1e6).toFixed(2) + ' million cells', 'var(' + color + ')');
+    seg.append(b);
+    const li = el('span'); const sw = el('span', 'sw'); sw.style.background = 'var(' + color + ')';
+    li.append(sw, document.createTextNode(name)); lg.append(li);
+  }
+  // a block too narrow for its label prints none
+  requestAnimationFrame(() => {
+    for (const b of seg.children) if (b.scrollWidth > b.clientWidth || b.clientWidth < 30) b.textContent = '';
+  });
+  const t = document.getElementById('sizes');
+  const hr = el('tr');
+  ['Chip', 'Area per core', 'Transistors per core'].forEach(h => hr.append(el('th', null, h)));
+  const th = el('thead'); th.append(hr); t.append(th);
+  const tb = el('tbody');
+  for (const k of ORDER.slice(1)) {
+    const tr = el('tr');
+    const c0 = el('td'); c0.append(document.createTextNode(NAME[k]), el('span', 'what', D.proc[k]));
+    tr.append(c0, el('td', null, D.mm2[k] + ' mm²'), el('td', null, D.mtr[k] + ' million'));
+    tb.append(tr);
+  }
+  const tr = el('tr');
+  const c0 = el('td'); c0.append(el('b', null, 'Our core'), el('span', 'what', D.proc.ours));
+  tr.append(c0, el('td', 'none', 'not known yet'), el('td', 'none', 'not known yet'));
+  tb.append(tr);
+  t.append(tb);
+})();
+// keep the segment label ink right if the theme flips after load
+new MutationObserver(() => {
+  const seg = document.getElementById('seg');
+  [...seg.children].forEach((b, i) => b.classList.toggle('ink-dark', PARTS[i][3] && root.dataset.mode !== 'dark'));
+}).observe(root, { attributes: true, attributeFilter: ['data-mode'] });
+
+// ------------------------------------------------------- all the numbers
+(function all() {
+  const t = document.getElementById('all');
+  const hr = el('tr'); hr.append(el('th', null, 'Measure'));
+  for (const k of ORDER) hr.append(el('th', k === 'ours' ? 'us' : null, NAME[k]));
+  const th = el('thead'); th.append(hr); t.append(th);
+  const tb = el('tbody');
+  const ROWS = [
+    ['Maximum on paper, fp16 multiply-adds per clock, per core', k => num(PEAK[k])],
+    ['Big job, 8,192³', k => D.big[k] == null ? null : num(D.big[k])],
+    ['Medium job, 256³', k => num(D.mid[k])],
+    ['Small job, 128 × 128 × 256', k => num(D.small[k]) + (k === 'ours' ? ' (39 before our fix)' : '')],
+    ['Attention, short text (128 tokens)', k => num(D.attS[k])],
+    ['Attention, long text (4,096 tokens)', k => D.attL[k] == null ? null : num(D.attL[k])],
+    ['Memory speed, whole chip (GB/s)', k => num(D.memChip[k]) + (k === 'ours' ? ' (setting)' : '')],
+    ['Memory speed per core (GB/s)', k => num(D.memCore[k])],
+    ['Top clock (MHz)', k => num(D.topClk[k]) + (k === 'ours' ? ' (predicted)' : '')],
+    ['Clock during the big job (MHz)', k => D.bigClk[k] == null ? null : num(D.bigClk[k])],
+    ['Board power during the big job (W)', k => D.bigW[k] == null ? null : String(D.bigW[k])],
+    ['TFLOPS per watt, big job', k => D.tfw[k] == null ? null : D.tfw[k].toFixed(2)],
+    ['Cores on the chip', k => String(D.cores[k])],
+    ['Area per core (mm²)', k => D.mm2[k] == null ? null : String(D.mm2[k])],
+    ['Transistors per core (millions)', k => D.mtr[k] == null ? null : String(D.mtr[k])],
+    ['Process', k => D.proc[k]],
+  ];
+  for (const [label, f] of ROWS) {
+    const tr = el('tr'); tr.append(el('td', null, label));
+    for (const k of ORDER) {
+      const v = f(k);
+      const cls = [k === 'ours' ? 'us' : '', v == null ? 'none' : ''].join(' ').trim() || null;
+      tr.append(el('td', cls, v == null ? '—' : v));
+    }
+    tb.append(tr);
+  }
+  t.append(tb);
+})();
+</script>
+</body>
+</html>

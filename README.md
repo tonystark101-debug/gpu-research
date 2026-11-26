@@ -2,6 +2,31 @@
 
 We're a small team designing GPU and AI-accelerator hardware in the open. We start by beating the best open-source GPU, then climb from there.
 
+## NVIDIA yardstick: our core vs one core of four NVIDIA chips (26 Nov 2026)
+
+The same jobs, counted per clock tick for one core (on NVIDIA, one SM). We measured NVIDIA's T4, L4, A100 and H100 on rented cloud GPUs through PyTorch, which runs NVIDIA's own cuBLAS and attention kernels. Clock and power were sampled during every test. Our core is Vortex with our copy-engine fix, run in SimX.
+
+| per core, per clock | Our core | T4 (2018) | L4 (2023) | A100 (2020) | H100 (2022) |
+|---|---:|---:|---:|---:|---:|
+| Maximum on paper (fp16) | 1,024 | 512 | 512 | 1,024 | 2,048 |
+| Big matrix job, 8,192³ | not run | 452 (88%) | 482 (94%) | 968 (95%) | 1,889 (92%) |
+| Small matrix job, 128×128×256 | **74** | 141 | 74 | 223 | 282 |
+| Attention, 128 tokens | **0.12** | 116 | 101 | 245 | 278 |
+| Small job, as a share of what memory can feed | — | 99% | 107% | 96% | 96% |
+
+- **The yardstick is sound.** NVIDIA's chips reach 88–95% of their published maximum on big jobs.
+- **Small jobs:** our core is level with an L4 core and 1.9× behind a T4 (Turing) core.
+  - Every NVIDIA core runs this job at its memory's limit.
+  - Our simulator gives one core 20–115× more memory speed per core than an NVIDIA SM gets, so this result flatters us.
+- **Attention is our biggest gap: 800–2,300×.** Vortex's attention test runs 5.7 million ordinary instructions for 2.1 million multiply-adds.
+- **Also measured:**
+  - Number formats: fp8 does 1.8–1.9× the work of fp16.
+  - Clocks under the power limit: the T4 drops to 43% of its top clock.
+  - Work per watt: 0.36 TFLOPS/W on the T4 rising to 0.92 on the H100.
+  - Our core's logic split: 57% general floating-point unit, 16% AI unit. This comes from Beacon on ASAP7, which predicts 840 MHz.
+
+Write-up: [docs/nvidia-yardstick.md](docs/nvidia-yardstick.md). Script and data: [yardstick/](yardstick/). Results page: [results/nvidia-yardstick.html](results/nvidia-yardstick.html).
+
 ## Week 2 result: the fix is now in Vortex's chip design (Verilog), and the two models agree
 
 - **Measured on the chip design itself.** In rtlsim, which runs Vortex's Verilog, the coalesced copy engine makes `sgemm_tcu_wg_dxa` **1.72× faster**: 13,877 → 8,054 cycles on 64×64×128, same answers.
@@ -102,10 +127,10 @@ Each design lives in its own repository, as Tiny Tapeout requires: [tt-minitenso
 
 ## Next
 
-1. Build the copy-engine change into Vortex's Verilog, and run its RTL tests and its simulator-vs-RTL parity checks. Then offer it upstream.
-2. A reorder buffer that writes whole 64-byte blocks (up to 32× fewer writes), plus more copy-engine request slots.
-3. An attention program that uses the copy engine.
-4. First FPGA run, for real clock speed and power.
+1. **Attention:** profile Vortex's attention program and fix its biggest bottleneck.
+2. **Realistic memory:** re-test our core with a real chip's per-core share of memory.
+3. **Area and power:** a full layout run of the core.
+4. **First FPGA run**, for real clock speed and power.
 
 ## License and credits
 

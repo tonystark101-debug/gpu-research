@@ -1,0 +1,319 @@
+{
+ "gpu": "NVIDIA L4",
+ "sm_count": 58,
+ "cc": "8.9",
+ "torch": "2.9.1+cu129",
+ "cuda": "12.9",
+ "tests": [
+  {
+   "name": "gemm_fp16_128x128x256",
+   "kind": "macs",
+   "seconds": 1.7700634331227522e-05,
+   "sm_clock_mhz": 2040.0,
+   "power_w": 34.11686666666667,
+   "tflops": 0.4739156712141546,
+   "macs_per_sm_per_clock": 2.0026862373823304,
+   "tflops_per_w": 0.013890949477994892,
+   "format": "fp16",
+   "shape": [
+    128,
+    128,
+    256
+   ],
+   "batch": 1
+  },
+  {
+   "name": "gemm_fp16_256x256x256",
+   "kind": "macs",
+   "seconds": 1.7495125975900516e-05,
+   "sm_clock_mhz": 2040.0,
+   "power_w": 39.88537931034484,
+   "tflops": 1.917930287911109,
+   "macs_per_sm_per_clock": 8.104844015851544,
+   "tflops_per_w": 0.04808604859910826,
+   "format": "fp16",
+   "shape": [
+    256,
+    256,
+    256
+   ],
+   "batch": 1
+  },
+  {
+   "name": "gemm_fp16_1024x1024x1024",
+   "kind": "macs",
+   "seconds": 4.9227624225799754e-05,
+   "sm_clock_mhz": 1344.0,
+   "power_w": 65.6238666666667,
+   "tflops": 43.623548399366456,
+   "macs_per_sm_per_clock": 279.8103217323895,
+   "tflops_per_w": 0.6647512652820381,
+   "format": "fp16",
+   "shape": [
+    1024,
+    1024,
+    1024
+   ],
+   "batch": 1
+  },
+  {
+   "name": "gemm_fp16_4096x4096x4096",
+   "kind": "macs",
+   "seconds": 0.002733989653716216,
+   "sm_clock_mhz": 910.1612903225806,
+   "power_w": 71.89774193548386,
+   "tflops": 50.27047314724987,
+   "macs_per_sm_per_clock": 476.1421436276699,
+   "tflops_per_w": 0.6991940469056617,
+   "format": "fp16",
+   "shape": [
+    4096,
+    4096,
+    4096
+   ],
+   "batch": 1
+  },
+  {
+   "name": "gemm_fp16_8192x8192x8192",
+   "kind": "macs",
+   "seconds": 0.020098512369791665,
+   "sm_clock_mhz": 979.0,
+   "power_w": 71.98320000000002,
+   "tflops": 54.70611991306286,
+   "macs_per_sm_per_clock": 481.72061492253584,
+   "tflops_per_w": 0.7599845507432684,
+   "format": "fp16",
+   "shape": [
+    8192,
+    8192,
+    8192
+   ],
+   "batch": 1
+  },
+  {
+   "name": "bgemm_fp16_128x128x256",
+   "kind": "macs",
+   "seconds": 0.0006130863167863349,
+   "sm_clock_mhz": 1490.0,
+   "power_w": 72.0976,
+   "tflops": 12.69744244954826,
+   "macs_per_sm_per_clock": 73.46356427648843,
+   "tflops_per_w": 0.17611463418405413,
+   "format": "fp16",
+   "shape": [
+    128,
+    128,
+    256
+   ],
+   "batch": 928
+  },
+  {
+   "name": "bgemm_fp16_256x256x256",
+   "kind": "macs",
+   "seconds": 0.0003849622224506579,
+   "sm_clock_mhz": 1177.0,
+   "power_w": 72.00833333333337,
+   "tflops": 20.221797802504597,
+   "macs_per_sm_per_clock": 148.11031701362757,
+   "tflops_per_w": 0.28082579982647266,
+   "format": "fp16",
+   "shape": [
+    256,
+    256,
+    256
+   ],
+   "batch": 232
+  },
+  {
+   "name": "gemm_fp32_4096x4096x4096",
+   "kind": "macs",
+   "seconds": 0.0112812255859375,
+   "sm_clock_mhz": 1128.8709677419354,
+   "power_w": 72.17467741935485,
+   "tflops": 12.182980689910426,
+   "macs_per_sm_per_clock": 93.0360498266312,
+   "tflops_per_w": 0.16879854715697498,
+   "format": "fp32",
+   "shape": [
+    4096,
+    4096,
+    4096
+   ],
+   "batch": 1
+  },
+  {
+   "name": "gemm_int8_4096x4096x4096",
+   "kind": "macs",
+   "seconds": 0.0035596716592478195,
+   "sm_clock_mhz": 1356.2903225806451,
+   "power_w": 72.46625806451615,
+   "tflops": 38.61000862676242,
+   "macs_per_sm_per_clock": 245.4082996931931,
+   "tflops_per_w": 0.5327998113603193,
+   "format": "int8",
+   "shape": [
+    4096,
+    4096,
+    4096
+   ],
+   "batch": 1
+  },
+  {
+   "name": "gemm_bf16_4096x4096x4096",
+   "kind": "macs",
+   "seconds": 0.002589974266693266,
+   "sm_clock_mhz": 962.4193548387096,
+   "power_w": 70.56125806451612,
+   "tflops": 53.06576024304456,
+   "macs_per_sm_per_clock": 475.3265279538558,
+   "tflops_per_w": 0.7520523542044142,
+   "format": "bf16",
+   "shape": [
+    4096,
+    4096,
+    4096
+   ],
+   "batch": 1
+  },
+  {
+   "name": "bgemm_bf16_128x128x256",
+   "kind": "macs",
+   "seconds": 0.000761342699641845,
+   "sm_clock_mhz": 879.6774193548387,
+   "power_w": 71.69680645161291,
+   "tflops": 10.22486749746479,
+   "macs_per_sm_per_clock": 100.2019689507886,
+   "tflops_per_w": 0.1426125932731104,
+   "format": "bf16",
+   "shape": [
+    128,
+    128,
+    256
+   ],
+   "batch": 928
+  },
+  {
+   "name": "gemm_tf32_4096x4096x4096",
+   "kind": "macs",
+   "seconds": 0.005452204499421296,
+   "sm_clock_mhz": 887.0689655172414,
+   "power_w": 72.25948275862068,
+   "tflops": 25.20796009881653,
+   "macs_per_sm_per_clock": 244.97531680093812,
+   "tflops_per_w": 0.34885331497628497,
+   "format": "tf32",
+   "shape": [
+    4096,
+    4096,
+    4096
+   ],
+   "batch": 1
+  },
+  {
+   "name": "gemm_fp8_4096x4096x4096",
+   "kind": "macs",
+   "seconds": 0.0013108230146389563,
+   "sm_clock_mhz": 1012.5,
+   "power_w": 71.80473333333335,
+   "tflops": 104.84935947653864,
+   "macs_per_sm_per_clock": 892.714852929235,
+   "tflops_per_w": 1.460201223640855,
+   "format": "fp8",
+   "shape": [
+    4096,
+    4096,
+    4096
+   ],
+   "batch": 1
+  },
+  {
+   "name": "attn_vortex_size_per_sm_B928_H1_N128_D64",
+   "kind": "macs",
+   "seconds": 0.0002443451875978628,
+   "sm_clock_mhz": 1365.0,
+   "power_w": 72.53020000000001,
+   "tflops": 15.92957139964579,
+   "macs_per_sm_per_clock": 100.60358342582916,
+   "tflops_per_w": 0.21962674030467016,
+   "format": "fp16",
+   "shape": [
+    928,
+    1,
+    128,
+    64
+   ]
+  },
+  {
+   "name": "attn_mid_B4_H16_N1024_D64",
+   "kind": "macs",
+   "seconds": 0.00030743200904546724,
+   "sm_clock_mhz": 1264.0,
+   "power_w": 71.74493333333334,
+   "tflops": 55.881849249663546,
+   "macs_per_sm_per_clock": 381.12348080575856,
+   "tflops_per_w": 0.778896106712254,
+   "format": "fp16",
+   "shape": [
+    4,
+    16,
+    1024,
+    64
+   ]
+  },
+  {
+   "name": "attn_long_B4_H16_N4096_D64",
+   "kind": "macs",
+   "seconds": 0.0050049022609904665,
+   "sm_clock_mhz": 1167.4137931034484,
+   "power_w": 71.81213793103448,
+   "tflops": 54.92173325470733,
+   "macs_per_sm_per_clock": 405.5658931820065,
+   "tflops_per_w": 0.76479735650611,
+   "format": "fp16",
+   "shape": [
+    4,
+    16,
+    4096,
+    64
+   ]
+  },
+  {
+   "name": "attn_long_d128_B1_H16_N4096_D128",
+   "kind": "macs",
+   "seconds": 0.002376626384747141,
+   "sm_clock_mhz": 1230.0,
+   "power_w": 72.67093333333334,
+   "tflops": 57.82943181732904,
+   "macs_per_sm_per_clock": 405.3086053919893,
+   "tflops_per_w": 0.795771144868499,
+   "format": "fp16",
+   "shape": [
+    1,
+    16,
+    4096,
+    128
+   ]
+  },
+  {
+   "name": "copy_1024MB",
+   "kind": "bytes",
+   "seconds": 0.009293232603843168,
+   "sm_clock_mhz": 2040.0,
+   "power_w": 62.68859999999997,
+   "gb_per_s": 231.08037208838604,
+   "bytes_per_sm_per_clock": 1.9530119344860213
+  },
+  {
+   "name": "copy_64MB",
+   "kind": "bytes",
+   "seconds": 0.0005670641656185043,
+   "sm_clock_mhz": 2040.0,
+   "power_w": 62.5852,
+   "gb_per_s": 236.68878433467395,
+   "bytes_per_sm_per_clock": 2.000412308440449
+  }
+ ],
+ "max_sm_clock_mhz": 2040,
+ "power_limit_w": 72.0,
+ "mem_bus_width_bits": null
+}
