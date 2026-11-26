@@ -64,7 +64,7 @@ out["ours"] = {
     "small_best_sim": round(SMALL_JOB_MACS / 54077, 1),    # + simulator-only buffer prefetch (week 1)
     "job_256": round(256 ** 3 / 224342, 1),                # 256x256x256, with the fix
     "attn_small_nt16": round(2 * 128 * 128 * 64 / 17078890, 3),
-    "attn_small_nt32": round(2 * 128 * 128 * 64 / 33828828, 3),
+    "attn_256_nt32": round(2 * 256 * 256 * 64 / 33828828, 3),  # the 32-thread run used 256 tokens
     "attn_instructions_nt16": 5694007,
     "fmax_mhz": 840, "process": "ASAP7 (academic 7 nm-class model)",
     "cells": 3328530, "ffs": 502717, "macros": 16,

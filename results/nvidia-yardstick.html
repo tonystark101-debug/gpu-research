@@ -440,7 +440,7 @@ panel(attention, {
   title: 'Short text', sub: '128 tokens: our test size', max: 1500, ticks: [0, 500, 1000, 1500],
   rows: ORDER.map(k => ({ key: k, value: D.attS[k], label: num(D.attS[k]),
     tv: num(D.attS[k]) + ' per clock',
-    tl: k === 'ours' ? 'Our core (16-thread setup; the 32-thread setup did 0.06). About ' + Math.round(D.attS.t4 / D.attS.ours) + '× below a T4 core.'
+    tl: k === 'ours' ? 'Our core, 16-thread setup (a 32-thread run on 256 tokens did 0.25). About ' + Math.round(D.attS.t4 / D.attS.ours) + '× below a T4 core.'
                      : NAME[k] + ': ' + Math.round(D.attS[k] / D.attS.ours).toLocaleString('en-US') + '× our core' })),
 });
 panel(attention, {

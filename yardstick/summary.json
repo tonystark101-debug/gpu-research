@@ -230,7 +230,7 @@
   "small_best_sim": 77.6,
   "job_256": 74.8,
   "attn_small_nt16": 0.123,
-  "attn_small_nt32": 0.062,
+  "attn_256_nt32": 0.248,
   "attn_instructions_nt16": 5694007,
   "fmax_mhz": 840,
   "process": "ASAP7 (academic 7 nm-class model)",

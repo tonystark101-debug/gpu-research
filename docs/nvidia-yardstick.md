@@ -59,7 +59,7 @@ How the limit is worked out: the small job moves 160 KB (A and B in, C out, all 
 | Long: 4,096 tokens | not run | 155 | 406 | 613 | 1,137 |
 | Long: 4,096 tokens, head size 128 | not run | 145 | 405 | 658 | 1,460 |
 
-- Our number comes from Vortex's `flash_attn_tcu_wg` test with the 16-thread setup: 17.1 million cycles for 2.1 million multiply-adds. The 32-thread setup was slower (33.8 million cycles, 0.06).
+- Our number comes from Vortex's `flash_attn_tcu_wg` test with the 16-thread setup: 17.1 million cycles for 2.1 million multiply-adds. The 32-thread setup was run on 256 tokens, not 128: 33.8 million cycles for 8.4 million multiply-adds, or 0.25 per clock. (An earlier version of this report wrongly listed it as 0.06 on 128 tokens.)
 - The test runs 5.7 million ordinary instructions for its 2.1 million multiply-adds, so the AI unit sits idle almost all the time.
 - Our copy-engine fix doesn't help here: this test stages its data in software, without the copy engine.
 - Counting: attention multiply-adds = 2 × batch × heads × tokens² × head size. Softmax isn't counted, the same way for both sides.
