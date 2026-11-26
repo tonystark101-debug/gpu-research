@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Battlefield: small AI computers</title>
+<style>
+  .viz-root {
+    --surf: var(--card, #fcfcfb);
+    --ink: var(--foreground, #0b0b0b);
+    --ink2: var(--muted-foreground, #52514e);
+    --muted: #898781;
+    --line: var(--border, rgba(11,11,11,.10));
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --ours: #2a78d6;
+    --ours2: #86b6ef;
+    --nv: #898781;
+    --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a;
+    --lw: 230px;
+    font-family: var(--font-sans, system-ui, -apple-system, "Segoe UI", sans-serif);
+    color: var(--ink); line-height: 1.45;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .viz-root[data-mode="dark"] {
+    --surf: var(--card, #1a1a19);
+    --ink: var(--foreground, #f0efec);
+    --ink2: var(--muted-foreground, #c3c2b7);
+    --line: var(--border, rgba(255,255,255,.10));
+    --grid: #2c2c2a; --axis: #383835;
+    --ours: #3987e5; --ours2: #9ec5f4;
+    --c1: #3987e5; --c2: #d95926; --c3: #199e70;
+  }
+  * { box-sizing: border-box; }
+  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .tile, .card { background: var(--surf); border: 1px solid var(--line); border-radius: var(--radius, 12px); }
+  .tile { padding: 12px 14px; }
+  .card { padding: 16px 18px; }
+  .t-value { font-size: 24px; font-weight: 650; line-height: 1.15; }
+  .t-label { font-size: 12px; color: var(--ink2); margin-top: 5px; }
+  h2 { font-size: 15px; font-weight: 650; margin: 0 0 4px; line-height: 1.35; }
+  .sub { font-size: 12.5px; color: var(--ink2); margin: 0 0 12px; }
+  .note { font-size: 12.5px; color: var(--ink2); margin: 12px 0 0; }
+  .note b { color: var(--ink); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink2); margin: 0 0 10px; }
+  .sw { display: inline-block; width: 12px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 6px; }
+  .swl { display: inline-block; width: 14px; height: 2px; vertical-align: 3px; margin-right: 6px; border-radius: 1px; }
+  table.spec { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.spec th, table.spec td { text-align: left; padding: 6px 8px; border-top: 1px solid var(--line); vertical-align: top; }
+  table.spec th { font-weight: 600; color: var(--ink2); width: 34%; }
+  table.spec tr:first-child th, table.spec tr:first-child td { border-top: none; }
+  table.spec td.num { font-variant-numeric: tabular-nums; }
+  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+  .rows { position: relative; }
+  .gridlayer { position: absolute; top: 0; bottom: 0; left: var(--lw); right: 0; pointer-events: none; }
+  .gl { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--grid); }
+  .gl.base { background: var(--axis); }
+  .row { display: grid; grid-template-columns: var(--lw) minmax(0, 1fr); align-items: center; height: 30px; }
+  .r-label { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 8px; }
+  .row.ours .r-label { font-weight: 650; }
+  .r-plot { position: relative; height: 100%; outline: none; }
+  .r-plot:focus-visible { box-shadow: inset 0 0 0 2px var(--ours); border-radius: 4px; }
+  .fill { position: absolute; left: 0; top: 50%; height: 12px; margin-top: -6px; border-radius: 0 4px 4px 0; min-width: 2px; }
+  .val { position: absolute; top: 50%; transform: translateY(-50%); font-size: 11.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .axis { position: relative; margin-left: var(--lw); height: 18px; margin-top: 2px; }
+  .axis span { position: absolute; top: 2px; font-size: 10.5px; color: var(--muted); transform: translateX(-50%); font-variant-numeric: tabular-nums; }
+  .axis span.first { transform: none; }
+  .divider { height: 1px; background: var(--line); margin: 6px 0 6px var(--lw); }
+  svg text { font-family: var(--font-sans, system-ui, -apple-system, "Segoe UI", sans-serif); }
+  .tip { position: absolute; z-index: 20; pointer-events: none; display: none; background: var(--popover, var(--surf)); color: var(--popover-foreground, var(--ink));
+         border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-size: 12px; max-width: 280px; box-shadow: 0 4px 14px rgba(0,0,0,.14);
+         font-family: var(--font-sans, system-ui, -apple-system, "Segoe UI", sans-serif); }
+  .tip .tv { font-weight: 650; font-size: 13px; }
+  .tip .tl { color: var(--muted-foreground, #52514e); }
+  @media (max-width: 720px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .two { grid-template-columns: minmax(0, 1fr); } .viz-root { --lw: 160px; } }
+</style>
+</head>
+<body>
+<div class="viz-root" id="root">
+  <div class="kpis" id="kpis"></div>
+
+  <div class="two">
+    <section class="card">
+      <h2>The fight: small AI computers (7–25 W)</h2>
+      <p class="sub">Robots, drones, cameras, edge boxes. The NVIDIA product to beat, against our core.</p>
+      <table class="spec" id="spec"></table>
+    </section>
+    <section class="card">
+      <h2>The score</h2>
+      <p class="sub">What decides who wins, most important first.</p>
+      <table class="spec">
+        <tr><th>1. Work per watt</th><td>Same real model on both: chat tokens or images per second, per watt</td></tr>
+        <tr><th>2. Work per dollar</th><td>Board price for NVIDIA; estimated chip cost for us, once we have a full-chip layout</td></tr>
+        <tr><th>3. Work per core per tick</th><td>What we can measure today, in simulation, on realistic memory</td></tr>
+        <tr><th>Not fighting yet</th><td>Data-centre chips, training, graphics speed (graphics stays working)</td></tr>
+      </table>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Small matrix job, honest memory: 74 was really 16, and a deeper copy engine gets it to 45</h2>
+    <p class="sub">Multiply-adds per clock tick for one core, on a 128 × 128 × 256 matrix product (fp16).</p>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--ours)"></span>Our core, on a Jetson core's share of memory</span>
+      <span><span class="sw" style="background:var(--ours2)"></span>Our core, on the simulator's old fast memory</span>
+      <span><span class="sw" style="background:var(--nv)"></span>NVIDIA core, measured on our yardstick</span>
+    </div>
+    <div id="gemm"></div>
+    <p class="note"><b>The old 74 was flattered:</b> the simulator gave our core about 10× the bandwidth of a Jetson core, answering 4–5× sooner. A Jetson core should land near the A100 core's 223: it does the same AI maths per tick and gets slightly more memory per tick. That's an estimate until we test a real Jetson.</p>
+  </section>
+
+  <section class="card">
+    <h2>The fix is depth: let the copy engine keep 64 reads in flight instead of 8</h2>
+    <p class="sub">Multiply-adds per clock tick, on the Jetson memory share, by how many memory reads the copy engine may have outstanding.</p>
+    <div class="legend" id="depthLegend"></div>
+    <div id="depth"></div>
+    <p class="note"><b>Why 8 is too few:</b> 8 reads × 64 bytes ÷ 400 ticks = 1.3 bytes per tick, a tenth of what the memory can deliver. Past 64, something else becomes the limit. On the old fast memory the same change is worth only 1%, which is why we missed it.</p>
+  </section>
+
+  <section class="card">
+    <h2>Attention barely notices the memory: 8.5 → 6.3 per tick</h2>
+    <p class="sub">Multiply-adds per clock tick for one core, 128 tokens, head size 64.</p>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--ours)"></span>Our core, on a Jetson core's share of memory</span>
+      <span><span class="sw" style="background:var(--ours2)"></span>Our core, on the simulator's old fast memory</span>
+      <span><span class="sw" style="background:var(--nv)"></span>NVIDIA core, measured</span>
+    </div>
+    <div id="att"></div>
+    <p class="note">Attention's time goes to arithmetic, not to waiting for memory, so it slows by only 1.35×. It is still 15–40× behind an NVIDIA core: that gap is design, not memory.</p>
+  </section>
+</div>
+<script>
+const root = document.getElementById('root');
+function luma(css) {
+  const c = document.createElement('canvas'); c.width = c.height = 1;
+  const x = c.getContext('2d'); x.fillStyle = '#808080'; x.fillStyle = css; x.fillRect(0, 0, 1, 1);
+  const d = x.getImageData(0, 0, 1, 1).data;
+  return d[3] < 10 ? null : 0.2126 * d[0] + 0.7152 * d[1] + 0.0722 * d[2];
+}
+function setMode() {
+  const cs = getComputedStyle(document.documentElement);
+  let l = luma(cs.backgroundColor);
+  if (l === null) l = luma(cs.getPropertyValue('--background').trim() || 'transparent');
+  if (l === null) l = matchMedia('(prefers-color-scheme: dark)').matches ? 0 : 255;
+  root.dataset.mode = l < 128 ? 'dark' : 'light';
+}
+setMode();
+new MutationObserver(setMode).observe(document.documentElement, { attributes: true });
+new MutationObserver(setMode).observe(document.head, { childList: true, subtree: true, characterData: true });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setMode);
+
+function el(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
+const tip = el('div', 'tip'); document.body.appendChild(tip);
+function showTip(x, y, tv, tl) {
+  tip.replaceChildren(el('div', 'tv', tv), el('div', 'tl', tl)); tip.style.display = 'block';
+  const maxX = document.documentElement.clientWidth + window.scrollX - tip.offsetWidth - 4;
+  tip.style.left = Math.max(4, Math.min(x + 12, maxX)) + 'px';
+  tip.style.top = Math.max(4, y - tip.offsetHeight - 10) + 'px';
+}
+function hover(t, tv, tl) {
+  t.tabIndex = 0; t.setAttribute('aria-label', tv + '. ' + tl);
+  t.addEventListener('pointermove', e => showTip(e.pageX, e.pageY, tv, tl));
+  t.addEventListener('pointerleave', () => { tip.style.display = 'none'; });
+  t.addEventListener('focus', () => { const r = t.getBoundingClientRect(); showTip(r.left + window.scrollX + r.width / 3, r.top + window.scrollY, tv, tl); });
+  t.addEventListener('blur', () => { tip.style.display = 'none'; });
+}
+
+// KPIs
+[['5×', 'slower: our matrix job on a Jetson core’s real share of memory (74 → 16 multiply-adds per tick)'],
+ ['2.9×', 'back, by letting the copy engine keep 64 reads in flight, not 8 (16 → 45); the Verilog model agrees within 0.4%'],
+ ['3–5×', 'behind a Jetson core on small matrix jobs after that fix (estimate; 10–14× before it)'],
+ ['15–40×', 'behind NVIDIA cores on attention; memory barely matters there (8.5 → 6.3 per tick)']].forEach(([v, l]) => {
+  const t = el('div', 'tile'); t.append(el('div', 't-value', v), el('div', 't-label', l));
+  document.getElementById('kpis').append(t);
+});
+
+// Spec table
+[['NVIDIA product', 'Jetson Orin Nano Super, 8 GB: $399 kit (was $249 until July 2026)'],
+ ['GPU cores', '8 Ampere cores; we simulate one core'],
+ ['AI maths per core per tick', '1,024 fp16 multiply-adds: the same as our core'],
+ ['Memory per core', '12.5 bytes per tick (102 GB/s ÷ 8 at 1,020 MHz), about 400 ticks away'],
+ ['Measured power', 'Object detection 146 images/s at 11 W; small chat models 25–38 tokens/s at 13–21 W'],
+ ['Next from NVIDIA', 'Orin Nano 2, first half of 2027: about 2× (NVIDIA’s claim)']].forEach(([k, a]) => {
+  const tr = el('tr'); tr.append(el('th', null, k)); const td = el('td', 'num', a); tr.append(td);
+  document.getElementById('spec').append(tr);
+});
+
+// Horizontal bars
+function bars(id, data, max, ticks) {
+  const RES = 70;
+  const at = v => `calc((100% - ${RES}px) * ${Math.min(v, max) / max})`;
+  const host = document.getElementById(id);
+  const rows = el('div', 'rows'); const gl = el('div', 'gridlayer');
+  ticks.forEach((t, i) => { const g = el('div', 'gl' + (i ? '' : ' base')); g.style.left = at(t); gl.append(g); });
+  rows.append(gl);
+  data.forEach(d => {
+    if (d === '-') { rows.append(el('div', 'divider')); return; }
+    const [name, v, color, tl, ours] = d;
+    const row = el('div', 'row' + (ours ? ' ours' : ''));
+    row.append(el('div', 'r-label', name));
+    const p = el('div', 'r-plot');
+    const f = el('div', 'fill'); f.style.width = at(v); f.style.background = color; p.append(f);
+    const lab = el('span', 'val', v < 10 ? v.toFixed(1) : String(Math.round(v)));
+    lab.style.left = `calc(${at(v)} + 6px)`; p.append(lab);
+    hover(p, (v < 10 ? v.toFixed(1) : v.toFixed(1)) + ' per tick', tl);
+    row.append(p); rows.append(row);
+  });
+  host.append(rows);
+  const ax = el('div', 'axis');
+  ticks.forEach((t, i) => { const s = el('span', i ? null : 'first', String(t)); s.style.left = at(t); ax.append(s); });
+  host.append(ax);
+}
+
+bars('gemm', [
+  ['Ours, as shipped', 15.7, 'var(--ours)', 'Copy engine 8 reads deep (Vortex default); 267,244 ticks', true],
+  ['Ours, deeper copy engine', 44.9, 'var(--ours)', '64 reads in flight; 93,365 ticks (2.9× faster)', true],
+  ['Ours, deeper, best setting', 69.8, 'var(--ours)', 'Wider AI-unit steps; 60,098 ticks', true],
+  ['Ours on the old fast memory', 73.9, 'var(--ours2)', 'The yardstick’s figure: 56,743 ticks, memory 10× too generous', false],
+  '-',
+  ['NVIDIA L4 core (2023)', 74, 'var(--nv)', 'Measured, batched; memory-bound', false],
+  ['NVIDIA T4 core (2018)', 141, 'var(--nv)', 'Measured, batched; memory-bound', false],
+  ['NVIDIA A100 core ≈ Jetson core', 223, 'var(--nv)', 'Measured A100 core; a Jetson core has the same AI maths per tick and a little more memory per tick (estimate)', false],
+], 240, [0, 60, 120, 180, 240]);
+
+bars('att', [
+  ['Ours, Jetson memory', 6.3, 'var(--ours)', '332,162 ticks; 32-thread core with the hardware exp unit', true],
+  ['Ours on the old fast memory', 8.5, 'var(--ours2)', '246,333 ticks', false],
+  '-',
+  ['NVIDIA L4 core (2023)', 101, 'var(--nv)', 'Measured: 16× ours', false],
+  ['NVIDIA T4 core (2018)', 116, 'var(--nv)', 'Measured: 18× ours', false],
+  ['NVIDIA A100 core ≈ Jetson core', 245, 'var(--nv)', 'Measured: 39× ours', false],
+], 260, [0, 65, 130, 195, 260]);
+
+// Line chart: copy-engine depth
+(function () {
+  const X = [8, 32, 64, 128];
+  const S = [
+    ['Best setting', '--c1', [23.2, 63.0, 69.8, 69.8]],
+    ['Medium job (256³)', '--c3', [16.3, 40.6, 46.5, 46.5]],
+    ['Standard setting', '--c2', [15.7, 39.4, 44.9, 44.9]],
+  ];
+  const lg = document.getElementById('depthLegend');
+  S.forEach(([n, c]) => { const s = el('span'); const w = el('span', 'swl'); w.style.background = 'var(' + c + ')'; s.append(w, document.createTextNode(n)); lg.append(s); });
+  const host = document.getElementById('depth');
+  const W = 640, H = 230, L = 34, R = 128, T = 10, B = 26, YMAX = 80;
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('width', '100%'); svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', 'Multiply-adds per tick by copy-engine depth: ' + S.map(s => s[0] + ' ' + s[2].join(', ')).join('; '));
+  const x = i => L + (W - L - R) * i / (X.length - 1);
+  const y = v => T + (H - T - B) * (1 - v / YMAX);
+  const mk = (t, a) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  [0, 20, 40, 60, 80].forEach(v => {
+    svg.append(mk('line', { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: v ? 'var(--grid)' : 'var(--axis)', 'stroke-width': 1 }));
+    const t = mk('text', { x: L - 6, y: y(v) + 3.5, 'text-anchor': 'end', 'font-size': 10.5, fill: 'var(--muted)' }); t.textContent = v; svg.append(t);
+  });
+  X.forEach((v, i) => { const t = mk('text', { x: x(i), y: H - 8, 'text-anchor': 'middle', 'font-size': 10.5, fill: 'var(--muted)' }); t.textContent = v + ' reads'; svg.append(t); });
+  const labY = [];
+  S.forEach(([n, c, vals]) => {
+    svg.append(mk('polyline', { points: vals.map((v, i) => x(i) + ',' + y(v)).join(' '), fill: 'none', stroke: 'var(' + c + ')', 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+    vals.forEach((v, i) => svg.append(mk('circle', { cx: x(i), cy: y(v), r: 4, fill: 'var(' + c + ')', stroke: 'var(--surf)', 'stroke-width': 2 })));
+    let ly = y(vals[vals.length - 1]) + 4;
+    labY.forEach(p => { if (Math.abs(p - ly) < 13) ly = p + 13; });
+    labY.push(ly);
+    const t = mk('text', { x: W - R + 8, y: ly, 'font-size': 11.5, fill: 'var(--ink2)' }); t.textContent = n + ' ' + vals[vals.length - 1].toFixed(0); svg.append(t);
+  });
+  const cross = mk('line', { y1: T, y2: H - B, stroke: 'var(--axis)', 'stroke-width': 1, visibility: 'hidden' }); svg.append(cross);
+  X.forEach((v, i) => {
+    const hit = mk('rect', { x: x(i) - 40, y: T, width: 80, height: H - T - B, fill: 'transparent', tabindex: 0 });
+    const tv = v + ' reads in flight' + (v === 8 ? ' (Vortex default)' : '');
+    const tl = S.map(s => s[0] + ': ' + s[2][i].toFixed(1)).join(' · ');
+    hit.setAttribute('aria-label', tv + '. ' + tl);
+    const on = (px, py) => { cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i)); cross.setAttribute('visibility', 'visible'); showTip(px, py, tv, tl); };
+    hit.addEventListener('pointermove', e => on(e.pageX, e.pageY));
+    hit.addEventListener('pointerleave', () => { cross.setAttribute('visibility', 'hidden'); tip.style.display = 'none'; });
+    hit.addEventListener('focus', () => { const r = hit.getBoundingClientRect(); on(r.left + window.scrollX + r.width / 2, r.top + window.scrollY + 20); });
+    hit.addEventListener('blur', () => { cross.setAttribute('visibility', 'hidden'); tip.style.display = 'none'; });
+    svg.append(hit);
+  });
+  host.append(svg);
+})();
+</script>
+</body>
+</html>

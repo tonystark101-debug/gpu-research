@@ -1,0 +1,38 @@
+{
+  "name": "jetson_orin_nano_core",
+  "description": "One Vortex core given one GPU core's (SM's) share of the Jetson Orin Nano Super memory system: 1/8 of its 128-bit LPDDR5-6400 (102.4 GB/s) and 1/8 of its GPU L2, at the 1020 MHz GPU clock. Battlefield step, 27 Nov 2026.",
+  "chip": {
+    "VX_CFG_NUM_CLUSTERS": 1,
+    "VX_CFG_NUM_CORES": 1,
+    "VX_CFG_L2_ENABLE": true,
+    "VX_CFG_L2_SIZE": 262144,
+    "VX_CFG_L2_NUM_WAYS": 16,
+    "VX_CFG_L2_NUM_BANKS": 2,
+    "VX_CFG_CP_LLC_CLIENT": 0,
+    "VX_CFG_L2_LINK_LATENCY": 64,
+    "VX_CFG_L2_MSHR_SIZE": 32
+  },
+  "platform": {
+    "VX_CFG_PLATFORM_MEMORY_NUM_BANKS": 1,
+    "VX_CFG_PLATFORM_CLOCK_RATE": 1020,
+    "VX_CFG_PLATFORM_MEMORY_PEAK_BW": 12800,
+    "VX_CFG_PLATFORM_MEMORY_TYPE": "GDDR6",
+    "VX_CFG_PLATFORM_MEMORY_DATA_RATE": 6400,
+    "VX_CFG_PLATFORM_MEMORY_LATENCY": 100
+  },
+  "reference": {
+    "dram_peak_bytes_per_cycle": 12.5,
+    "l2_hit_cycles": 200,
+    "dram_cycles": 400
+  },
+  "sources": {
+    "NUM_CORES": "One core stands for one of the Orin Nano's 8 GPU cores (1024 CUDA cores, 32 tensor cores = 8 Ampere SMs)",
+    "PLATFORM_MEMORY_*": "128-bit LPDDR5 at 6400 MT/s = 102.4 GB/s (NVIDIA: 102 GB/s for the Super kit), split 8 ways: one x16 channel of 2 B x 6.4 GT/s = 12.8 GB/s per core. Vortex models no LPDDR5, so the channel is a GDDR6 x16 channel at the same data rate, as Vortex's own gtx480 profile models GDDR5",
+    "PLATFORM_CLOCK_RATE": "1020 MHz GPU clock of the Orin Nano Super's top power mode, so 12.8 GB/s is 12.5 bytes per core clock",
+    "L2_SIZE": "Per-core share of the GPU L2 (assumed 256 KB per SM; confirm against the research notes)",
+    "L2_NUM_BANKS": "2 banks of 64 B per clock: more L2 bandwidth than one SM's share, so the L2 is not an artificial bottleneck",
+    "CP_LLC_CLIENT": "0: host uploads bypass the L2, so every kernel starts with its data in DRAM, as in NVIDIA's batched benchmark whose data is far bigger than the L2",
+    "L2_LINK_LATENCY, PLATFORM_MEMORY_LATENCY": "Calibrated with ci/profile_check.py to the reference latencies",
+    "reference": "l2_hit_cycles: about 200, as Vortex's calibrated Ampere A100 (200) and Turing T4 (188) profiles; dram_cycles: estimate for LPDDR5 at 1020 MHz, to be replaced by a measured Orin number if one is published"
+  }
+}

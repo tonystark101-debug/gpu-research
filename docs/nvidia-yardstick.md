@@ -50,6 +50,11 @@ How the limit is worked out: the small job moves 160 KB (A and B in, C out, all 
 
 **What this means for us:** our simulator's memory is set to 460 GB/s (two 64-byte HBM2 channels) for one core. That is 20–115× more per core than an NVIDIA core gets. Our small-job number is therefore not memory-limited and is flattered. The fair next test is our core on a realistic per-core share of memory.
 
+**Correction, 27 Nov ([honest-numbers.md](honest-numbers.md)):**
+- The "460 GB/s" is a nominal label, not what the simulator models. Per clock tick, it delivers 128 bytes. That is 11–47× an NVIDIA core's 2.7–11.5 bytes, not 20–115×.
+- It answers a load that misses every cache in 90 ticks, against about 290–600 on real chips.
+- On a Jetson Orin Nano core's share (12.5 bytes per tick, 400-tick delay), the small job drops from 74 to 16 multiply-adds per tick. With the copy engine allowed 64 reads in flight instead of 8, it reaches 45 (70 in the best setting).
+
 ### Attention (fp16, head size 64 unless noted)
 
 | per core, per clock | Our core | T4 | L4 | A100 | H100 |
@@ -62,6 +67,7 @@ How the limit is worked out: the small job moves 160 KB (A and B in, C out, all 
 - Our number comes from Vortex's `flash_attn_tcu_wg` test with the 16-thread setup: 17.1 million cycles for 2.1 million multiply-adds. The 32-thread setup was run on 256 tokens, not 128: 33.8 million cycles for 8.4 million multiply-adds, or 0.25 per clock. (An earlier version of this report wrongly listed it as 0.06 on 128 tokens.)
 - The test runs 5.7 million ordinary instructions for its 2.1 million multiply-adds, so the AI unit sits idle almost all the time.
 - Our copy-engine fix doesn't help here: this test stages its data in software, without the copy engine.
+- **Update, 27 Nov:** on the same 32-thread core as the matrix jobs, the fixed attention runs at 8.5 per tick on 128 tokens (the 16-thread figure below is 3.6). On a Jetson core's share of memory it runs at 6.3 ([honest-numbers.md](honest-numbers.md)).
 - **Update, 26 Nov:** we found and fixed the cause ([attention-report.md](attention-report.md)). 96% of the time was softmax: `expf` ran in software double precision. With the fix, the same 128-token run is 29× faster, at 3.6 multiply-adds per clock with the TFU. The gap to NVIDIA at this size becomes 28–78×. Vortex's own upcoming FA4 kernel (PR #495, unmerged) reaches 26–31.
 - Counting: attention multiply-adds = 2 × batch × heads × tokens² × head size. Softmax isn't counted, the same way for both sides.
 

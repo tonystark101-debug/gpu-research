@@ -1,0 +1,11 @@
+  run: /home/User/vortex_bf/build_bf4/ci/blackbox.sh --driver=simx --profile=jetson_orin_nano_core --app=chase '--args=-b131072 -w1 -i256' --clusters=1 --cores=1
+  run: /home/User/vortex_bf/build_bf4/ci/blackbox.sh --driver=simx --profile=jetson_orin_nano_core --app=chase '--args=-b131072 -w1 -i512' --clusters=1 --cores=1
+  run: /home/User/vortex_bf/build_bf4/ci/blackbox.sh --driver=simx --profile=jetson_orin_nano_core --app=chase '--args=-b131072 -w0 -c -i256' --clusters=1 --cores=1
+  run: /home/User/vortex_bf/build_bf4/ci/blackbox.sh --driver=simx --profile=jetson_orin_nano_core --app=chase '--args=-b131072 -w0 -c -i512' --clusters=1 --cores=1
+
+profile jetson_orin_nano_core (simx), tolerance 5%
+metric                           reference         model    error  verdict
+dram_peak_bytes_per_cycle             12.5        12.549    +0.4%  ok
+l2_hit_cycles                          200           176   -12.0%  OUTSIDE
+dram_cycles                            400       355.637   -11.1%  OUTSIDE
+CALIB_DONE l2link=64 memlat=100

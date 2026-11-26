@@ -1,0 +1,188 @@
+{
+ "base_A32_n128": {
+  "status": "PASS",
+  "cycles": 246333,
+  "macs_per_clk": 8.51,
+  "memory_profile": "simulator default"
+ },
+ "base_A16_n128": {
+  "status": "PASS",
+  "cycles": 586231,
+  "macs_per_clk": 3.58,
+  "memory_profile": "simulator default"
+ },
+ "base_S1_gemm128": {
+  "status": "PASS",
+  "cycles": 56743,
+  "macs_per_clk": 73.92,
+  "memory_profile": "simulator default"
+ },
+ "base_A32_n256": {
+  "status": "PASS",
+  "cycles": 898673,
+  "macs_per_clk": 9.33,
+  "memory_profile": "simulator default"
+ },
+ "base_S3_gemm128_nrc32": {
+  "status": "PASS",
+  "cycles": 34258,
+  "macs_per_clk": 122.43,
+  "memory_profile": "simulator default"
+ },
+ "base_S4_gemm256": {
+  "status": "PASS",
+  "cycles": 224342,
+  "macs_per_clk": 74.78,
+  "memory_profile": "simulator default"
+ },
+ "jet400_A32_n128": {
+  "status": "PASS",
+  "cycles": 332162,
+  "macs_per_clk": 6.31,
+  "memory_profile": "jet400.json"
+ },
+ "jet400_A16_n128": {
+  "status": "PASS",
+  "cycles": 792160,
+  "macs_per_clk": 2.65,
+  "memory_profile": "jet400.json"
+ },
+ "jet400_S1_gemm128": {
+  "status": "PASS",
+  "cycles": 267244,
+  "macs_per_clk": 15.69,
+  "memory_profile": "jet400.json"
+ },
+ "jet400_A32_n256": {
+  "status": "PASS",
+  "cycles": 1142133,
+  "macs_per_clk": 7.34,
+  "memory_profile": "jet400.json"
+ },
+ "jet300_S1_gemm128": {
+  "status": "PASS",
+  "cycles": 241501,
+  "macs_per_clk": 17.37,
+  "memory_profile": "jet300.json"
+ },
+ "jet400_S3_gemm128_nrc32": {
+  "status": "PASS",
+  "cycles": 180544,
+  "macs_per_clk": 23.23,
+  "memory_profile": "jet400.json"
+ },
+ "jet300_A32_n128": {
+  "status": "PASS",
+  "cycles": 316578,
+  "macs_per_clk": 6.62,
+  "memory_profile": "jet300.json"
+ },
+ "jet400_S4_gemm256": {
+  "status": "PASS",
+  "cycles": 1027257,
+  "macs_per_clk": 16.33,
+  "memory_profile": "jet400.json"
+ },
+ "jet600_S1_gemm128": {
+  "status": "PASS",
+  "cycles": 319415,
+  "macs_per_clk": 13.13,
+  "memory_profile": "jet600.json"
+ },
+ "jet400_inf64_S1_gemm128": {
+  "status": "PASS",
+  "cycles": 93365,
+  "macs_per_clk": 44.92,
+  "memory_profile": "jet400.json"
+ },
+ "jet400_inf128_S1_gemm128": {
+  "status": "PASS",
+  "cycles": 93365,
+  "macs_per_clk": 44.92,
+  "memory_profile": "jet400.json"
+ },
+ "jet400_inf32_S1_gemm128": {
+  "status": "PASS",
+  "cycles": 106351,
+  "macs_per_clk": 39.44,
+  "memory_profile": "jet400.json"
+ },
+ "jet600_A32_n128": {
+  "status": "PASS",
+  "cycles": 363740,
+  "macs_per_clk": 5.77,
+  "memory_profile": "jet600.json"
+ },
+ "jet400_inf32_S3_gemm128_nrc32": {
+  "status": "PASS",
+  "cycles": 66606,
+  "macs_per_clk": 62.97,
+  "memory_profile": "jet400.json"
+ },
+ "jet400_inf64_S3_gemm128_nrc32": {
+  "status": "PASS",
+  "cycles": 60098,
+  "macs_per_clk": 69.79,
+  "memory_profile": "jet400.json"
+ },
+ "jet400_inf128_S3_gemm128_nrc32": {
+  "status": "PASS",
+  "cycles": 60098,
+  "macs_per_clk": 69.79,
+  "memory_profile": "jet400.json"
+ },
+ "jet400m_inf128_S1_gemm128": {
+  "status": "PASS",
+  "cycles": 93363,
+  "macs_per_clk": 44.92,
+  "memory_profile": "jet400m.json"
+ },
+ "jet400_inf64_S4_gemm256": {
+  "status": "PASS",
+  "cycles": 360637,
+  "macs_per_clk": 46.52,
+  "memory_profile": "jet400.json"
+ },
+ "jet400_inf32_S4_gemm256": {
+  "status": "PASS",
+  "cycles": 413140,
+  "macs_per_clk": 40.61,
+  "memory_profile": "jet400.json"
+ },
+ "jet400_inf128_S4_gemm256": {
+  "status": "PASS",
+  "cycles": 360637,
+  "macs_per_clk": 46.52,
+  "memory_profile": "jet400.json"
+ },
+ "jet400_inf128_q32_S1_gemm128": {
+  "status": "PASS",
+  "cycles": 93365,
+  "macs_per_clk": 44.92,
+  "memory_profile": "jet400.json"
+ },
+ "jet400m_inf128_q32_S1_gemm128": {
+  "status": "PASS",
+  "cycles": 93363,
+  "macs_per_clk": 44.92,
+  "memory_profile": "jet400m.json"
+ },
+ "base_inf64_S1_gemm128": {
+  "status": "PASS",
+  "cycles": 55950,
+  "macs_per_clk": 74.97,
+  "memory_profile": "simulator default"
+ },
+ "rtl_jet400_inf8_S1_gemm128": {
+  "status": "PASS",
+  "cycles": 264625,
+  "macs_per_clk": 15.85,
+  "memory_profile": "jet400.json"
+ },
+ "rtl_jet400_inf64_S1_gemm128": {
+  "status": "PASS",
+  "cycles": 92951,
+  "macs_per_clk": 45.12,
+  "memory_profile": "jet400.json"
+ }
+}

@@ -1,0 +1,4 @@
+default memory, cold chase: 23863 / 47026 cycles -> 90 cycles per load
+vecadd n=262144: 423043 cycles -> 7 bytes per cycle (2 reads + 1 write of fp32)
+vecadd n=1048576: 1660258 cycles -> 7 bytes per cycle (2 reads + 1 write of fp32)
+DEFMEM_DONE

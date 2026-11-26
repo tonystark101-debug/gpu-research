@@ -1,0 +1,31 @@
+base_A32_n128	PASS	246333	77368	5.5e-05	125	
+base_A16_n128	PASS	586231	211936	6.82e-05	126	
+base_S1_gemm128	PASS	56743	30712		130	
+base_A32_n256	PASS	898673	279648	4.94e-05	5	
+base_S3_gemm128_nrc32	PASS	34258	24092		119	
+base_S4_gemm256	PASS	224342	122752		121	
+jet400_A32_n128	PASS	332162	77368	5.5e-05	115	/home/User/vortex_bf/profiles/jet400.json
+jet400_A16_n128	PASS	792160	211936	6.82e-05	116	/home/User/vortex_bf/profiles/jet400.json
+jet400_S1_gemm128	PASS	267244	30712		120	/home/User/vortex_bf/profiles/jet400.json
+jet400_A32_n256	PASS	1142133	279648	4.94e-05	6	/home/User/vortex_bf/profiles/jet400.json
+jet300_S1_gemm128	PASS	241501	30712		122	/home/User/vortex_bf/profiles/jet300.json
+jet400_S3_gemm128_nrc32	PASS	180544	24092		122	/home/User/vortex_bf/profiles/jet400.json
+jet300_A32_n128	PASS	316578	77368	5.5e-05	116	/home/User/vortex_bf/profiles/jet300.json
+jet400_S4_gemm256	PASS	1027257	122752		125	/home/User/vortex_bf/profiles/jet400.json
+jet600_S1_gemm128	PASS	319415	30712		121	/home/User/vortex_bf/profiles/jet600.json
+jet400_inf64_S1_gemm128	PASS	93365	30712		121	/home/User/vortex_bf/profiles/jet400.json
+jet400_inf128_S1_gemm128	PASS	93365	30712		121	/home/User/vortex_bf/profiles/jet400.json
+jet400_inf32_S1_gemm128	PASS	106351	30712		121	/home/User/vortex_bf/profiles/jet400.json
+jet600_A32_n128	PASS	363740	77368	5.5e-05	116	/home/User/vortex_bf/profiles/jet600.json
+jet400_inf32_S3_gemm128_nrc32	PASS	66606	24092		133	/home/User/vortex_bf/profiles/jet400.json
+jet400_inf64_S3_gemm128_nrc32	PASS	60098	24092		134	/home/User/vortex_bf/profiles/jet400.json
+jet400_inf128_S3_gemm128_nrc32	PASS	60098	24092		135	/home/User/vortex_bf/profiles/jet400.json
+jet400m_inf128_S1_gemm128	PASS	93363	30712		143	/home/User/vortex_bf/profiles/jet400m.json
+jet400_inf64_S4_gemm256	PASS	360637	122752		136	/home/User/vortex_bf/profiles/jet400.json
+jet400_inf32_S4_gemm256	PASS	413140	122752		137	/home/User/vortex_bf/profiles/jet400.json
+jet400_inf128_S4_gemm256	PASS	360637	122752		137	/home/User/vortex_bf/profiles/jet400.json
+jet400_inf128_q32_S1_gemm128	PASS	93365	30712		125	/home/User/vortex_bf/profiles/jet400.json
+jet400m_inf128_q32_S1_gemm128	PASS	93363	30712		124	/home/User/vortex_bf/profiles/jet400m.json
+base_inf64_S1_gemm128	PASS	55950	30712		120	
+rtl_jet400_inf8_S1_gemm128	PASS	264625	30712		1805	/home/User/vortex_bf/profiles/jet400.json
+rtl_jet400_inf64_S1_gemm128	PASS	92951	30712		1476	/home/User/vortex_bf/profiles/jet400.json

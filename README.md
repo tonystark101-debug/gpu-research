@@ -2,6 +2,28 @@
 
 We're a small team designing GPU and AI-accelerator hardware in the open. We start by beating the best open-source GPU, then climb from there.
 
+## Battlefield and honest numbers (27 Nov 2026)
+
+**The fight we picked:** small AI computers (7–25 W: robots, drones, cameras, edge boxes). The NVIDIA product to beat is the **Jetson Orin Nano Super**: 8 Ampere cores and a $399 developer kit (NVIDIA raised it from $249 in July 2026). Each of its cores does 1,024 fp16 multiply-adds per tick, the same as our core. The score is AI work per watt and per dollar on the same real models. Facts, with sources: [docs/battlefield.md](docs/battlefield.md), [docs/battlefield-research.md](docs/battlefield-research.md).
+
+**Our core on a Jetson core's real share of memory** (12.5 bytes per tick, 400-tick delay, calibrated with Vortex's own latency check):
+
+| multiply-adds per tick, one core | simulator's old memory | Jetson share | Jetson share, copy engine 64 deep |
+|---|---:|---:|---:|
+| Small matrix job (128 × 128 × 256), standard setting | 73.9 | **15.7** | **44.9** |
+| Small matrix job, best setting | 122.4 | **23.2** | **69.8** |
+| Medium matrix job (256³) | 74.8 | **16.3** | **46.5** |
+| Attention, 128 tokens | 8.5 | **6.3** | — |
+
+- **The yardstick's small-job number was flattered:** the simulator's memory gave our core about 10× a Jetson core's bandwidth and answered 4–5× sooner.
+- **The fix is depth.** The copy engine keeps only 8 reads in flight (Vortex's default). At a 400-tick delay that caps it at 1.3 bytes per tick. With 64 in flight, the matrix jobs run 2.9× faster.
+  - It's an existing setting, and costs about 1% of the core's storage cells.
+  - **The Verilog model agrees:** 264,625 vs 267,244 ticks at 8 in flight, and 92,951 vs 93,365 at 64.
+- **Where that leaves us against a Jetson core** (estimated from the A100 core we measured, which has the same AI maths per tick): about 3–5× behind on small matrix jobs with the deeper copy engine, and 15–40× behind on attention.
+- **Chip size and watts:** a full synthesis of the core (Yosys + OpenSTA, ASAP7) is running; [docs/honest-numbers.md](docs/honest-numbers.md) will be updated.
+
+Write-up: [docs/honest-numbers.md](docs/honest-numbers.md). Page: [results/battlefield.html](results/battlefield.html). Runs: [runs/battlefield/](runs/battlefield/). Scripts: `scripts/bf_*.sh`.
+
 ## Attention: 19–38× faster, and the cause was software (26 Nov 2026)
 
 Our yardstick showed Vortex's attention 800–2,300× behind NVIDIA, per core per clock. Profiling Vortex's FlashAttention test found that 96% of its time went to the softmax, mostly to `expf`. The C library computes it in double precision, which 32-bit Vortex cores emulate in integer code.
@@ -145,9 +167,9 @@ Each design lives in its own repository, as Tiny Tapeout requires: [tt-minitenso
 
 ## Next
 
-1. **Offer the attention fix to Vortex** as a pull request.
-2. **Realistic memory:** re-test our core with a real chip's per-core share of memory.
-3. **Area and power:** a full layout run of the core.
+1. **Chip size and power** of our core: synthesis is running (ASAP7, Yosys + OpenSTA, power from recorded activity).
+2. **Run one real AI model end to end** on our core: one vision model and one small chat model that people run on a Jetson.
+3. **Find the next limit** after the deeper copy engine, and **offer the attention fix and the copy-engine depth to Vortex**.
 4. **First FPGA run**, for real clock speed and power.
 
 ## License and credits
