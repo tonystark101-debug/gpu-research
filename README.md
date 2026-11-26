@@ -2,6 +2,24 @@
 
 We're a small team designing GPU and AI-accelerator hardware in the open. We start by beating the best open-source GPU, then climb from there.
 
+## Attention: 19–38× faster, and the cause was software (26 Nov 2026)
+
+Our yardstick showed Vortex's attention 800–2,300× behind NVIDIA, per core per clock. Profiling Vortex's FlashAttention test found that 96% of its time went to the softmax, mostly to `expf`. The C library computes it in double precision, which 32-bit Vortex cores emulate in integer code.
+
+We made five test-code changes: a float-only exp (or the TFU's), a branch-free max, all softmax rows at once, exact fast fp16 packing, and word-wide K/V staging.
+
+| `flash_attn_tcu_wg`, fp16 (cycles) | master | ours | ours + TFU |
+|---|---:|---:|---:|
+| NT16, 128 tokens, head 64 | 17,078,890 | 901,532 (18.9×) | 586,231 (29.1×) |
+| NT32, 256 tokens, head 64 | 33,828,828 | 1,451,215 (23.3×) | 898,673 (37.6×) |
+
+- **Same results:** the worst error is unchanged.
+- **Official tests:** every flash_attn case passes. XLEN 32: 5/5. XLEN 64: 7/7, including the two rtlsim (Verilog) cases.
+- **On Vortex's CI configurations:** 9.4–16× faster, across both the scalar and tensor-core attention tests.
+- **Gap to NVIDIA at 128 tokens:** from 800–2,300× down to 28–78× per core per clock. Vortex's upcoming FA4 kernel (PR #495) reaches 26–31 multiply-adds per clock, within about 4–11× of NVIDIA.
+
+Write-up: [docs/attention-report.md](docs/attention-report.md). Patch: [patches/attention-flash-attn-2221ee2.patch](patches/attention-flash-attn-2221ee2.patch). Logs: [runs/attention/](runs/attention/).
+
 ## NVIDIA yardstick: our core vs one core of four NVIDIA chips (26 Nov 2026)
 
 The same jobs, counted per clock tick for one core (on NVIDIA, one SM). We measured NVIDIA's T4, L4, A100 and H100 on rented cloud GPUs through PyTorch, which runs NVIDIA's own cuBLAS and attention kernels. Clock and power were sampled during every test. Our core is Vortex with our copy-engine fix, run in SimX.
@@ -127,7 +145,7 @@ Each design lives in its own repository, as Tiny Tapeout requires: [tt-minitenso
 
 ## Next
 
-1. **Attention:** profile Vortex's attention program and fix its biggest bottleneck.
+1. **Offer the attention fix to Vortex** as a pull request.
 2. **Realistic memory:** re-test our core with a real chip's per-core share of memory.
 3. **Area and power:** a full layout run of the core.
 4. **First FPGA run**, for real clock speed and power.

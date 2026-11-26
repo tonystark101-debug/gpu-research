@@ -1,0 +1,24 @@
+CONFIGS=-DVX_CFG_NUM_THREADS=8 -DVX_CFG_NUM_WARPS=16 -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_TCU_FEDP2K -DVX_CFG_TCU_TMEM_ENABLE -DVX_CFG_TCU_TMEM_COLS=512 -DVX_CFG_EXT_TFU_ENABLE -DITYPE=fp16 -DOTYPE=fp32 -DWGMMA_NRC=32 -DPERF_ENABLE
+Running: CONFIGS="-DVX_CFG_NUM_THREADS=8 -DVX_CFG_NUM_WARPS=16 -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_TCU_FEDP2K -DVX_CFG_TCU_TMEM_ENABLE -DVX_CFG_TCU_TMEM_COLS=512 -DVX_CFG_EXT_TFU_ENABLE -DITYPE=fp16 -DOTYPE=fp32 -DWGMMA_NRC=32 -DPERF_ENABLE" make -C "./ci/../tests/regression/flashattention4" runtime-simx > /dev/null
+Running: OPTS="-l64 -n32 -d64 -b8 -c1" CONFIGS="-DVX_CFG_NUM_THREADS=8 -DVX_CFG_NUM_WARPS=16 -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_TCU_FEDP2K -DVX_CFG_TCU_TMEM_ENABLE -DVX_CFG_TCU_TMEM_COLS=512 -DVX_CFG_EXT_TFU_ENABLE -DITYPE=fp16 -DOTYPE=fp32 -DWGMMA_NRC=32 -DPERF_ENABLE" make -C "./ci/../tests/regression/flashattention4" run-simx
+make: Entering directory '/home/User/vortex_fa4/build/tests/regression/flashattention4'
+CONFIGS="-DVX_CFG_NUM_THREADS=8 -DVX_CFG_NUM_WARPS=16 -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_TCU_FEDP2K -DVX_CFG_TCU_TMEM_ENABLE -DVX_CFG_TCU_TMEM_COLS=512 -DVX_CFG_EXT_TFU_ENABLE -DITYPE=fp16 -DOTYPE=fp32 -DWGMMA_NRC=32 -DPERF_ENABLE -DDEEP_BUF -DWGMMA_RS"     make -C /home/User/vortex_fa4/build/sw/runtime/stub DESTDIR=/home/User/vortex_fa4/build/sw/runtime
+make[1]: Entering directory '/home/User/vortex_fa4/build/sw/runtime/stub'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/home/User/vortex_fa4/build/sw/runtime/stub'
+CONFIGS="-DVX_CFG_NUM_THREADS=8 -DVX_CFG_NUM_WARPS=16 -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_TCU_FEDP2K -DVX_CFG_TCU_TMEM_ENABLE -DVX_CFG_TCU_TMEM_COLS=512 -DVX_CFG_EXT_TFU_ENABLE -DITYPE=fp16 -DOTYPE=fp32 -DWGMMA_NRC=32 -DPERF_ENABLE -DDEEP_BUF -DWGMMA_RS"     make -C /home/User/vortex_fa4/build/sw/runtime/simx DESTDIR=/home/User/vortex_fa4/build/sw/runtime
+make[1]: Entering directory '/home/User/vortex_fa4/build/sw/runtime/simx'
+DESTDIR=/home/User/vortex_fa4/build/sw/runtime make -C /home/User/vortex_fa4/build/sim/simx /home/User/vortex_fa4/build/sw/runtime/libsimx.so
+make[2]: Entering directory '/home/User/vortex_fa4/build/sim/simx'
+make[2]: Leaving directory '/home/User/vortex_fa4/build/sim/simx'
+make[1]: Leaving directory '/home/User/vortex_fa4/build/sw/runtime/simx'
+LD_LIBRARY_PATH=/home/User/vortex_fa4/build/sw/runtime: VORTEX_DRIVER=simx ./flashattention4 -l64 -n32 -d64 -b8 -c1
+O: max relative error 3.50587e-05, bound 0.01
+PERF: scheduler: idle=62%, occupancy=10.0 (62%), simt_util=8.0 (100%)
+PERF: stalls: fetch=0%, ibuf=0%, scrb=32%, opds=2%, alu=0%, lsu=0%, sfu=0%, fpu=0%, tcu=0%
+PERF: inst_mix: alu=39%, lsu=1%, sfu=8%, fpu=36%, tcu=16%
+PERF: branches: total=1754, divergent=1 (rate=0%)
+PERF: memory: ifetch_lat=6.42, load_lat=18.22, loads=3464, stores=3049
+PERF: instrs=67160, cycles=102672, IPC=0.654
+PASSED!
+make: Leaving directory '/home/User/vortex_fa4/build/tests/regression/flashattention4'

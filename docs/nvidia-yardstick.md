@@ -62,6 +62,7 @@ How the limit is worked out: the small job moves 160 KB (A and B in, C out, all 
 - Our number comes from Vortex's `flash_attn_tcu_wg` test with the 16-thread setup: 17.1 million cycles for 2.1 million multiply-adds. The 32-thread setup was run on 256 tokens, not 128: 33.8 million cycles for 8.4 million multiply-adds, or 0.25 per clock. (An earlier version of this report wrongly listed it as 0.06 on 128 tokens.)
 - The test runs 5.7 million ordinary instructions for its 2.1 million multiply-adds, so the AI unit sits idle almost all the time.
 - Our copy-engine fix doesn't help here: this test stages its data in software, without the copy engine.
+- **Update, 26 Nov:** we found and fixed the cause ([attention-report.md](attention-report.md)). 96% of the time was softmax: `expf` ran in software double precision. With the fix, the same 128-token run is 29× faster, at 3.6 multiply-adds per clock with the TFU. The gap to NVIDIA at this size becomes 28–78×. Vortex's own upcoming FA4 kernel (PR #495, unmerged) reaches 26–31.
 - Counting: attention multiply-adds = 2 × batch × heads × tokens² × head size. Softmax isn't counted, the same way for both sides.
 
 ### Number formats (big job, 4,096³; share of each chip's maximum in brackets)

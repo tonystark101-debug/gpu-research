@@ -1,0 +1,346 @@
+diff --git a/tests/regression/flash_attn/flash_attn_device.h b/tests/regression/flash_attn/flash_attn_device.h
+index de670a4af..12402420b 100644
+--- a/tests/regression/flash_attn/flash_attn_device.h
++++ b/tests/regression/flash_attn/flash_attn_device.h
+@@ -5,12 +5,16 @@
+ // You may obtain a copy of the License at
+ // http://www.apache.org/licenses/LICENSE-2.0
+ 
+-// Device side shared by the flash_attn kernels: warp reductions over a row.
++// Device side shared by the flash_attn kernels: warp reductions over a row,
++// and the softmax exponential.
+ 
+ #ifndef FLASH_ATTN_DEVICE_H
+ #define FLASH_ATTN_DEVICE_H
+ 
+ #include <vx_intrinsics.h>
++#ifdef VX_CFG_EXT_TFU_ENABLE
++#include <vx_tfu.h>
++#endif
+ 
+ namespace flash_attn {
+ 
+@@ -26,12 +30,15 @@ inline float from_bits(size_t u) {
+   return x;
+ }
+ 
+-// Butterfly reductions across the warp's lanes; every lane gets the result.
++// Butterfly reductions across groups of warp_size lanes (a power of two, up to
++// the warp); every lane of a group gets its group's result.
++// The max uses fmax.s: a (y > x) ? y : x select compiles to a per-lane branch,
++// so every step would pay a divergent split and join.
+ inline float warp_reduce_max(float x, uint32_t warp_size) {
+   int clamp = warp_size - 1, segmask = ~clamp & 0x3f;
+   for (uint32_t off = warp_size >> 1; off > 0; off >>= 1) {
+     float y = from_bits(vx_shfl_bfly(bits_from(x), off, clamp, segmask));
+-    x = (y > x) ? y : x;
++    x = __builtin_fmaxf(x, y);
+   }
+   return x;
+ }
+@@ -44,6 +51,52 @@ inline float warp_reduce_sum(float x, uint32_t warp_size) {
+   return x;
+ }
+ 
++// exp(x) for the softmax.
++//
++// The C library's expf computes in double precision. Vortex cores have no
++// double-precision FPU at XLEN 32, so each of those operations is emulated in
++// integer code, and expf alone took most of the attention kernels' time. With
++// the transcendental unit (TFU) the hardware 2^x is used. Without it, a
++// float-only version: x = k*ln2 + r with |r| <= ln2/2, e^r from a degree-6
++// polynomial (about 1 ulp), and 2^k placed in the exponent bits. Results below
++// FLT_MIN flush to 0, so exp(-inf) is 0.
++inline float expf_fast(float x) {
++#ifdef VX_CFG_EXT_TFU_ENABLE
++  return vx_expf_fast(x);
++#else
++  const uint32_t keep = (x >= -87.0f);
++  x = __builtin_fminf(__builtin_fmaxf(x, -87.0f), 88.0f);
++  // k = round(x * log2(e)), by the 1.5 * 2^23 rounding trick.
++  const float shifter = 12582912.0f;
++  const float t = __builtin_fmaf(x, 1.44269504088896341f, shifter);
++  uint32_t tb;
++  __builtin_memcpy(&tb, &t, 4);
++  const int32_t k = (int32_t)(tb - 0x4B400000u);
++  const float kf = t - shifter;
++  // r = x - k*ln2, with ln2 split in two (Cody-Waite).
++  float r = __builtin_fmaf(kf, -0.693145751953125f, x);
++  r = __builtin_fmaf(kf, -1.428606765330187e-06f, r);
++  float p = 1.388888888888889e-03f;
++  p = __builtin_fmaf(p, r, 8.333333333333333e-03f);
++  p = __builtin_fmaf(p, r, 4.166666666666667e-02f);
++  p = __builtin_fmaf(p, r, 1.666666666666667e-01f);
++  p = __builtin_fmaf(p, r, 0.5f);
++  p = __builtin_fmaf(p, r, 1.0f);
++  p = __builtin_fmaf(p, r, 1.0f);
++  // 2^k for k in [-126, 127], then flush the clamped low end to 0.
++  const uint32_t sb = (uint32_t)(k + 127) << 23;
++  float s;
++  __builtin_memcpy(&s, &sb, 4);
++  uint32_t rb;
++  const float res = p * s;
++  __builtin_memcpy(&rb, &res, 4);
++  rb &= 0u - keep;
++  float out;
++  __builtin_memcpy(&out, &rb, 4);
++  return out;
++#endif
++}
++
+ } // namespace flash_attn
+ 
+ #endif // FLASH_ATTN_DEVICE_H
+diff --git a/tests/regression/flash_attn/kernel.cpp b/tests/regression/flash_attn/kernel.cpp
+index f5af13018..5c7e33516 100644
+--- a/tests/regression/flash_attn/kernel.cpp
++++ b/tests/regression/flash_attn/kernel.cpp
+@@ -98,14 +98,14 @@ __kernel void kernel_main(kernel_arg_t* __UNIFORM__ arg) {
+         float local_max = P_row[threadIdx.x];
+         for (uint32_t i = 1; i < sp_count; ++i) {
+             float v = P_row[threadIdx.x + i * num_threads];
+-            local_max = (v > local_max) ? v : local_max;
++            local_max = __builtin_fmaxf(local_max, v);
+         }
+         float rowmax = warp_reduce_max(local_max, num_threads);
+ 
+         float local_sum = 0.0f;
+         for (uint32_t i = 0; i < sp_count; ++i) {
+             uint32_t c = threadIdx.x + i * num_threads;
+-            float p = expf(P_row[c] - rowmax);
++            float p = expf_fast(P_row[c] - rowmax);
+             P_row[c] = p;
+             local_sum += p;
+         }
+@@ -113,8 +113,8 @@ __kernel void kernel_main(kernel_arg_t* __UNIFORM__ arg) {
+         __syncthreads();
+ 
+         // Compute new m and l
+-        float new_m = (m > rowmax) ? m : rowmax;
+-        float old_weight = expf(m - new_m), new_weight = expf(rowmax - new_m);
++        float new_m = __builtin_fmaxf(m, rowmax);
++        float old_weight = expf_fast(m - new_m), new_weight = expf_fast(rowmax - new_m);
+         float new_l = old_weight * l + new_weight * rowsum;
+ 
+         // Update O
+diff --git a/tests/regression/flash_attn_tcu_wg/kernel.cpp b/tests/regression/flash_attn_tcu_wg/kernel.cpp
+index 52b02a14e..c71c2f0a8 100644
+--- a/tests/regression/flash_attn_tcu_wg/kernel.cpp
++++ b/tests/regression/flash_attn_tcu_wg/kernel.cpp
+@@ -16,6 +16,33 @@ static_assert(std::is_same_v<output_t, float>, "OTYPE must be fp32");
+ 
+ using flash_attn::warp_reduce_max;
+ using flash_attn::warp_reduce_sum;
++using flash_attn::expf_fast;
++
++// Lanes per softmax row, when a warp's xtileM rows spread evenly over its
++// lanes in power-of-two groups; 0 falls back to one row at a time.
++constexpr uint32_t kSmLanesPerRowRaw =
++    (VX_CFG_NUM_THREADS % ctx::xtileM == 0) ? (VX_CFG_NUM_THREADS / ctx::xtileM) : 0;
++constexpr uint32_t kSmLanesPerRow =
++    (kSmLanesPerRowRaw != 0 && (kSmLanesPerRowRaw & (kSmLanesPerRowRaw - 1)) == 0) ? kSmLanesPerRowRaw : 0;
++// 4-byte copies for staging 16-bit operands.
++inline uint32_t ld32(const void* p) {
++  uint32_t v;
++  __builtin_memcpy(&v, __builtin_assume_aligned(p, 4), 4);
++  return v;
++}
++inline void st32(void* p, uint32_t v) {
++  __builtin_memcpy(__builtin_assume_aligned(p, 4), &v, 4);
++}
++
++// Element (k, n) of a B operand staged as block-major tiles of tileK x xtileN.
++// Inside a block K runs fastest, so k and k + 1 (k even) share one word.
++inline uint32_t b_off(uint32_t k, uint32_t n, uint32_t ntiles) {
++  return ((k / ctx::tileK) * ntiles + (n / ctx::xtileN)) * (ctx::tileK * ctx::xtileN)
++       + ctx::b_blockmajor_idx(k % ctx::tileK, n % ctx::xtileN);
++}
++
++// Wide staging moves 16-bit operands as 32-bit words.
++constexpr bool kWideStage = (sizeof(input_t) == 2) && (ctx::b_blk_k % 2 == 0);
+ 
+ // fp32 -> ITYPE pack
+ template <typename T> struct always_false : std::false_type {};
+@@ -32,6 +59,43 @@ static inline input_t pack_input(output_t v) {
+   }
+ }
+ 
++// Pack a softmax weight p (0 <= p <= 1, finite) into ITYPE, rounding to
++// nearest even like the host reference. The general fpcvt routines also handle
++// signs, NaN, infinity and overflow, which p never has, at about 50 integer
++// operations per value. These do the same rounding in a handful.
++template <typename It = vt::ITYPE>
++static inline input_t pack_p(output_t v) {
++  uint32_t b;
++  __builtin_memcpy(&b, &v, 4);
++  if constexpr (std::is_same_v<It, vt::fp16>) {
++#ifdef VX_CFG_EXT_ZFHMIN_ENABLE
++    // Hardware conversion (fcvt.h.s), round to nearest even.
++    _Float16 h = (_Float16)v;
++    uint16_t hb;
++    __builtin_memcpy(&hb, &h, 2);
++    return (input_t)hb;
++#else
++    // Normal fp16 (p >= 2^-14): drop 13 mantissa bits with round-to-nearest-
++    // even, then move the exponent bias from 127 to 15.
++    const uint32_t norm = ((b + 0xFFFu + ((b >> 13) & 1u)) >> 13) - (112u << 10);
++    // Below 2^-14 the fp16 value is a multiple of 2^-24: round p * 2^24 to an
++    // integer with the float adder (1024 rounds up to the smallest normal).
++    const float t = v * 16777216.0f + 8388608.0f;
++    uint32_t tb;
++    __builtin_memcpy(&tb, &t, 4);
++    const uint32_t sub = tb - 0x4B000000u;
++    const uint32_t is_sub = (b < 0x38800000u);
++    return (input_t)((sub & (0u - is_sub)) | (norm & (is_sub - 1u)));
++#endif
++  } else if constexpr (std::is_same_v<It, vt::bf16>) {
++    // bf16 keeps fp32's exponent range: round the low 16 bits away.
++    return (input_t)((b + 0x7FFFu + ((b >> 16) & 1u)) >> 16);
++  } else {
++    // tf32 keeps the exact generic routine.
++    return pack_input<It>(v);
++  }
++}
++
+ // Inverse of ctx::store_matrix_sync, with per-row scale applied
+ template <bool Scaled, typename Frag>
+ static inline void load_acc_scaled(Frag &dst, const output_t *tile, uint32_t ldm,
+@@ -117,12 +181,30 @@ __kernel void kernel_main(kernel_arg_t* __UNIFORM__ arg) {
+     // S = Q * K^T
+     for (uint32_t h = 0; h < head_dim; h += dt) {
+       // Stage K^T: B[k][n] = K[(j+n)][h+k]
++      if constexpr (kWideStage) {
++        // Threads walk along K's rows a word (two k) at a time, so a warp
++        // reads contiguous memory, and each word lands whole in the B layout.
++        // (n, p) steps by cta_size words without a division per element.
++        const uint32_t pairs = dt / 2;
++        const uint32_t dn = cta_size / pairs, dp = cta_size % pairs;
++        uint32_t n = cta_thread / pairs, p = cta_thread % pairs;
++        for (uint32_t i = cta_thread; i < Bc * pairs; i += cta_size) {
++          const uint32_t k = 2 * p;
++          st32(local_K + b_off(k, n, s_ntiles), ld32(K + (j + n) * head_dim + (h + k)));
++          p += dp;
++          n += dn;
++          const uint32_t wrap = (p >= pairs);
++          p -= pairs & (0u - wrap);
++          n += wrap;
++        }
++      } else {
+       for (uint32_t i = cta_thread; i < dt * Bc; i += cta_size) {
+         auto k = i / Bc, n = i % Bc;
+         auto off = ((k / ctx::tileK) * s_ntiles + (n / ctx::xtileN)) * b_tile_elems
+                  + ctx::b_blockmajor_idx(k % ctx::tileK, n % ctx::xtileN);
+         local_K[off] = K[(j + n) * head_dim + (h + k)];
+       }
++      }
+       __syncthreads();
+ 
+       for (uint32_t n = 0; n < s_ntiles; ++n) {
+@@ -150,6 +232,42 @@ __kernel void kernel_main(kernel_arg_t* __UNIFORM__ arg) {
+     }
+ 
+     // softmax, S -> P
++    if (kSmLanesPerRow != 0 && Bc % (kSmLanesPerRow ? kSmLanesPerRow : 1u) == 0) {
++      // Each row of this warp's slice belongs to kSmLanesPerRow neighbouring
++      // lanes, which split its columns. All of the warp's rows run at once, and
++      // a row's max and sum take log2(kSmLanesPerRow) shuffles instead of
++      // log2(warp size) for each row in turn.
++      const uint32_t rr  = lane / kSmLanesPerRow;
++      const uint32_t sub = lane % kSmLanesPerRow;
++      const uint32_t r   = warp_row + rr;
++      const uint32_t per_lane = Bc / kSmLanesPerRow;
++      const output_t* S_row = local_S + r * Bc;
++      input_t* P_base = local_P + r * ctx::tileK;
++
++      output_t lmax = -INFINITY;
++      for (uint32_t i = 0; i < per_lane; ++i) {
++        lmax = __builtin_fmaxf(lmax, S_row[i * kSmLanesPerRow + sub]);
++      }
++      const output_t rowmax = warp_reduce_max(lmax, kSmLanesPerRow);
++
++      const output_t m_old = local_m[r];
++      const output_t new_m = __builtin_fmaxf(m_old, rowmax);
++      const output_t w_old = expf_fast(m_old - new_m);
++
++      output_t p_sum = output_t(0);
++      for (uint32_t i = 0; i < per_lane; ++i) {
++        const uint32_t c = i * kSmLanesPerRow + sub;
++        output_t p = expf_fast(S_row[c] - new_m);
++        p_sum += p;
++        P_base[(c / ctx::tileK) * (Br * ctx::tileK) + (c % ctx::tileK)] = pack_p(p);
++      }
++      const output_t rowsum = warp_reduce_sum(p_sum, kSmLanesPerRow);
++
++      // The row's lanes hold the same values; they all store them.
++      local_m[r] = new_m;
++      local_l[r] = w_old * local_l[r] + rowsum;
++      local_w[r] = w_old;
++    } else {
+     for (uint32_t rr = 0; rr < ctx::xtileM; ++rr) {
+       const auto r = warp_row + rr;
+       const output_t* S_row = local_S + r * Bc;
+@@ -159,19 +277,19 @@ __kernel void kernel_main(kernel_arg_t* __UNIFORM__ arg) {
+       output_t lmax = -INFINITY;
+       for (uint32_t c = lane; c < Bc; c += nt_lanes) {
+         output_t v = S_row[c];
+-        lmax = (v > lmax) ? v : lmax;
++        lmax = __builtin_fmaxf(lmax, v);
+       }
+       const output_t rowmax = warp_reduce_max(lmax, nt_lanes);
+ 
+       const output_t m_old = local_m[r];
+-      const output_t new_m = (m_old > rowmax) ? m_old : rowmax;
+-      const output_t w_old = expf(m_old - new_m);
++      const output_t new_m = __builtin_fmaxf(m_old, rowmax);
++      const output_t w_old = expf_fast(m_old - new_m);
+ 
+       output_t p_sum = output_t(0);
+       for (uint32_t c = lane; c < Bc; c += nt_lanes) {
+-        output_t p = expf(S_row[c] - new_m);
++        output_t p = expf_fast(S_row[c] - new_m);
+         p_sum += p;
+-        P_base[(c / ctx::tileK) * (Br * ctx::tileK) + (c % ctx::tileK)] = pack_input(p);
++        P_base[(c / ctx::tileK) * (Br * ctx::tileK) + (c % ctx::tileK)] = pack_p(p);
+       }
+       const output_t rowsum = warp_reduce_sum(p_sum, nt_lanes);
+ 
+@@ -181,17 +299,39 @@ __kernel void kernel_main(kernel_arg_t* __UNIFORM__ arg) {
+       local_l[r] = w_old * local_l[r] + rowsum;
+       local_w[r] = w_old;
+     }
++    }
+     __syncthreads();
+ 
+     // O = diag(w_old)*O + P*V
+     for (uint32_t h = 0; h < head_dim; h += dt) {
+       // Stage V: B[k][n] = V[(j+k)][h+n]
++      if constexpr (kWideStage) {
++        // 2x2 blocks: one word from each of rows k and k+1 of V (columns n,
++        // n+1), regrouped into the B layout's (k, k+1) words for n and n+1.
++        const uint32_t pairs = dt / 2;
++        const uint32_t dk = cta_size / pairs, dp = cta_size % pairs;
++        uint32_t kp = cta_thread / pairs, p = cta_thread % pairs;
++        for (uint32_t i = cta_thread; i < (Bc / 2) * pairs; i += cta_size) {
++          const uint32_t k = 2 * kp, n = 2 * p;
++          const input_t* src = V + (j + k) * head_dim + (h + n);
++          const uint32_t r0 = ld32(src);             // V[k][n],   V[k][n+1]
++          const uint32_t r1 = ld32(src + head_dim);  // V[k+1][n], V[k+1][n+1]
++          st32(local_V + b_off(k, n, o_ntiles),     (r0 & 0xFFFFu) | (r1 << 16));
++          st32(local_V + b_off(k, n + 1, o_ntiles), (r0 >> 16) | (r1 & 0xFFFF0000u));
++          p += dp;
++          kp += dk;
++          const uint32_t wrap = (p >= pairs);
++          p -= pairs & (0u - wrap);
++          kp += wrap;
++        }
++      } else {
+       for (uint32_t i = cta_thread; i < Bc * dt; i += cta_size) {
+         auto k = i / dt, n = i % dt;
+         auto off = ((k / ctx::tileK) * o_ntiles + (n / ctx::xtileN)) * b_tile_elems
+                      + ctx::b_blockmajor_idx(k % ctx::tileK, n % ctx::xtileN);
+         local_V[off] = V[(j + k) * head_dim + (h + n)];
+       }
++      }
+       __syncthreads();
+ 
+       for (uint32_t n = 0; n < o_ntiles; ++n) {

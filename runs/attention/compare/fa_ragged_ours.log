@@ -1,0 +1,28 @@
+CONFIGS=-DPERF_ENABLE
+Running: CONFIGS="-DPERF_ENABLE" make -C "./ci/../tests/regression/flash_attn" runtime-simx > /dev/null
+Running: OPTS="-N63 -D8" CONFIGS="-DPERF_ENABLE" make -C "./ci/../tests/regression/flash_attn" run-simx
+make: Entering directory '/home/User/vortex_att/build/tests/regression/flash_attn'
+CONFIGS="-DPERF_ENABLE"     make -C /home/User/vortex_att/build/sw/runtime/stub DESTDIR=/home/User/vortex_att/build/sw/runtime
+make[1]: Entering directory '/home/User/vortex_att/build/sw/runtime/stub'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/home/User/vortex_att/build/sw/runtime/stub'
+CONFIGS="-DPERF_ENABLE"     make -C /home/User/vortex_att/build/sw/runtime/simx DESTDIR=/home/User/vortex_att/build/sw/runtime
+make[1]: Entering directory '/home/User/vortex_att/build/sw/runtime/simx'
+DESTDIR=/home/User/vortex_att/build/sw/runtime make -C /home/User/vortex_att/build/sim/simx /home/User/vortex_att/build/sw/runtime/libsimx.so
+make[2]: Entering directory '/home/User/vortex_att/build/sim/simx'
+make[2]: Leaving directory '/home/User/vortex_att/build/sim/simx'
+make[1]: Leaving directory '/home/User/vortex_att/build/sw/runtime/simx'
+LD_LIBRARY_PATH=/home/User/vortex_att/build/sw/runtime: VORTEX_DRIVER=simx ./flash_attn -N63 -D8
+flash_attn: seq_len=63 head_dim=8
+num_threads=4 num_warps=4 lmem_size=16384
+block_size_r=2 block_size_c=4 head_dim_tile=8 lmem=416 occupancy=2
+Elapsed: 4014 ms
+worst absolute error: 1.19e-07 (atol=0.001, rtol=0.001)
+PASSED!
+PERF: scheduler: idle=66%, occupancy=4.0 (100%), simt_util=4.0 (100%)
+PERF: stalls: fetch=0%, ibuf=0%, scrb=19%, opds=5%, alu=0%, lsu=0%, sfu=0%, fpu=0%
+PERF: inst_mix: alu=50%, lsu=21%, sfu=10%, fpu=19%
+PERF: branches: total=174074, divergent=1152 (rate=1%)
+PERF: memory: ifetch_lat=6.01, load_lat=11.15, loads=577264, stores=178216
+PERF: instrs=911806, cycles=2647071, IPC=0.344
+make: Leaving directory '/home/User/vortex_att/build/tests/regression/flash_attn'

@@ -149,14 +149,14 @@
   </section>
 
   <section class="card">
-    <h2>Attention, the heart of AI chat models, is our biggest gap: 800–2,300× behind.</h2>
+    <h2>Attention, the heart of AI chat models: our fix cut the gap from 800–2,300× to 28–78×.</h2>
     <p class="sub">Multiply-adds per clock tick, for one core.</p>
     <div class="legend">
       <span><span class="sw" style="background:var(--ours)"></span>Our core</span>
       <span><span class="sw" style="background:var(--nv)"></span>NVIDIA core</span>
     </div>
     <div class="multiples" id="attention"></div>
-    <p class="note">Our attention test runs 5.7 million ordinary instructions to do 2.1 million multiply-adds, so our AI unit spends almost all its time waiting. NVIDIA gets much faster on long text, up to 1,460 per clock. We haven't run long text yet.</p>
+    <p class="note"><b>The slow part was software, not the chip:</b> the exp function worked in double precision, which this core can only emulate. With our fix the same test runs 29× faster, from 0.12 to 3.6 per clock. Vortex's own upcoming FA4 design reaches 26–31. NVIDIA gets much faster on long text, up to 1,460 per clock. We haven't run long text yet.</p>
   </section>
 
   <section class="card">
@@ -198,13 +198,13 @@
     <h2>What this tells us</h2>
     <ul class="lessons">
       <li><b>The yardstick works.</b> NVIDIA's chips hit 88–95% of their published maximum on big jobs, so these numbers can be trusted.</li>
-      <li><b>Against a Turing core, our plan's target:</b> 1.9× behind on small jobs, 3.6× on medium ones, and about 940× on attention.</li>
+      <li><b>Against a Turing core, our plan's target:</b> 1.9× behind on small jobs, 3.6× on medium ones, and about 32× on attention after our fix (940× before).</li>
       <li><b>Small jobs are a memory race for everyone.</b> Feeding data matters more than adding maths units, which fits our data-movement bet.</li>
       <li><b>Power, not clock speed, limits real chips.</b> Work per watt is the number to design for.</li>
     </ul>
     <h2 style="margin-top:14px">Next, in this order</h2>
     <ol class="steps">
-      <li><b>Attention.</b> Find where our attention test's time goes, then fix the biggest piece. <span class="time">About 1–2 days.</span></li>
+      <li><b>Attention: done.</b> 96% of the time was a slow exp function. Fixed: 19–38× faster, every official test passes. <span class="time">Took 1 day.</span></li>
       <li><b>Realistic memory.</b> Re-run our core with a real chip's share of memory, so the small-job result is fair. <span class="time">About half a day.</span></li>
       <li><b>Size and power.</b> A full layout run of our core, to get square millimetres and watts. <span class="time">About 1–2 days of cloud computing.</span></li>
     </ol>
@@ -256,7 +256,7 @@ const D = {
   memLimit: { t4: 143.0, l4: 68.5, a100: 231.8, h100: 295.1 },
   memCore:  { ours: 460, t4: 5.8, l4: 4.0, a100: 12.8, h100: 22.8 },
   memChip:  { ours: 460, t4: 231, l4: 231, a100: 1379, h100: 3013 },
-  attS:     { ours: 0.123, t4: 115.7, l4: 100.6, a100: 245.2, h100: 278.2 },
+  attS:     { ours: 3.58, t4: 115.7, l4: 100.6, a100: 245.2, h100: 278.2 },
   attL:     { ours: null, t4: 145.2, l4: 405.3, a100: 658.1, h100: 1460.0 },
   topClk:   { ours: 840, t4: 1590, l4: 2040, a100: 1410, h100: 1980 },
   bigClk:   { ours: null, t4: 689, l4: 979, a100: 1251, h100: 1294 },
@@ -390,7 +390,7 @@ function legend(items) {
 const KPIS = [
   ['88–95%', 'of their published maximum: what NVIDIA’s chips reach on a big job, so the yardstick is sound'],
   ['1.9×', 'behind a Turing core (T4, our plan’s target) on a small matrix job: 74 vs 141 per clock'],
-  ['~940×', 'behind a Turing core on attention: 0.12 vs 116 per clock, our biggest hole'],
+  ['~32×', 'behind a Turing core on attention after our fix: 3.6 vs 116 per clock (was ~940×)'],
   ['96–107%', 'of what memory can feed: where NVIDIA’s cores sit on small jobs'],
 ];
 const kp = document.getElementById('kpis');
@@ -440,7 +440,7 @@ panel(attention, {
   title: 'Short text', sub: '128 tokens: our test size', max: 1500, ticks: [0, 500, 1000, 1500],
   rows: ORDER.map(k => ({ key: k, value: D.attS[k], label: num(D.attS[k]),
     tv: num(D.attS[k]) + ' per clock',
-    tl: k === 'ours' ? 'Our core, 16-thread setup (a 32-thread run on 256 tokens did 0.25). About ' + Math.round(D.attS.t4 / D.attS.ours) + '× below a T4 core.'
+    tl: k === 'ours' ? 'Our core with our attention fix and the exp unit, 16-thread setup (was 0.12). About ' + Math.round(D.attS.t4 / D.attS.ours) + '× below a T4 core.'
                      : NAME[k] + ': ' + Math.round(D.attS[k] / D.attS.ours).toLocaleString('en-US') + '× our core' })),
 });
 panel(attention, {
@@ -546,7 +546,7 @@ new MutationObserver(() => {
     ['Big job, 8,192³', k => D.big[k] == null ? null : num(D.big[k])],
     ['Medium job, 256³', k => num(D.mid[k])],
     ['Small job, 128 × 128 × 256', k => num(D.small[k]) + (k === 'ours' ? ' (39 before our fix)' : '')],
-    ['Attention, short text (128 tokens)', k => num(D.attS[k])],
+    ['Attention, short text (128 tokens)', k => num(D.attS[k]) + (k === 'ours' ? ' (0.12 before our fix)' : '')],
     ['Attention, long text (4,096 tokens)', k => D.attL[k] == null ? null : num(D.attL[k])],
     ['Memory speed, whole chip (GB/s)', k => num(D.memChip[k]) + (k === 'ours' ? ' (setting)' : '')],
     ['Memory speed per core (GB/s)', k => num(D.memCore[k])],
