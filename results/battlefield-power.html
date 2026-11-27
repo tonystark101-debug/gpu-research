@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Our core: size, power and work per watt</title>
+<style>
+  .viz-root {
+    --surf: var(--card, #fcfcfb);
+    --ink: var(--foreground, #0b0b0b);
+    --ink2: var(--muted-foreground, #52514e);
+    --muted: #898781;
+    --line: var(--border, rgba(11,11,11,.10));
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --ours: #2a78d6;
+    --nv: #898781;
+    --c1: #2a78d6; --c2: #eb6834;
+    --lw: 190px;
+    font-family: var(--font-sans, system-ui, -apple-system, "Segoe UI", sans-serif);
+    color: var(--ink); line-height: 1.45;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .viz-root[data-mode="dark"] {
+    --surf: var(--card, #1a1a19);
+    --ink: var(--foreground, #f0efec);
+    --ink2: var(--muted-foreground, #c3c2b7);
+    --line: var(--border, rgba(255,255,255,.10));
+    --grid: #2c2c2a; --axis: #383835;
+    --ours: #3987e5;
+    --c1: #3987e5; --c2: #d95926;
+  }
+  * { box-sizing: border-box; }
+  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .tile, .card { background: var(--surf); border: 1px solid var(--line); border-radius: var(--radius, 12px); }
+  .tile { padding: 12px 14px; }
+  .card { padding: 16px 18px; }
+  .t-value { font-size: 24px; font-weight: 650; line-height: 1.15; }
+  .t-label { font-size: 12px; color: var(--ink2); margin-top: 5px; }
+  h2 { font-size: 15px; font-weight: 650; margin: 0 0 4px; line-height: 1.35; }
+  .sub { font-size: 12.5px; color: var(--ink2); margin: 0 0 12px; }
+  .note { font-size: 12.5px; color: var(--ink2); margin: 12px 0 0; }
+  .note b { color: var(--ink); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink2); margin: 0 0 10px; }
+  .sw { display: inline-block; width: 12px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 6px; }
+  .rows { position: relative; }
+  .gridlayer { position: absolute; top: 0; bottom: 0; left: var(--lw); right: 0; pointer-events: none; }
+  .gl { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--grid); }
+  .gl.base { background: var(--axis); }
+  .row { display: grid; grid-template-columns: var(--lw) minmax(0, 1fr); align-items: center; height: 30px; }
+  .r-label { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 8px; }
+  .row.ours .r-label { font-weight: 650; }
+  .r-plot { position: relative; height: 100%; outline: none; }
+  .r-plot:focus-visible { box-shadow: inset 0 0 0 2px var(--ours); border-radius: 4px; }
+  .fill { position: absolute; left: 0; top: 50%; height: 12px; margin-top: -6px; border-radius: 0 4px 4px 0; min-width: 2px; }
+  .val { position: absolute; top: 50%; transform: translateY(-50%); font-size: 11.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .axis { position: relative; margin-left: var(--lw); height: 18px; margin-top: 2px; }
+  .axis span { position: absolute; top: 2px; font-size: 10.5px; color: var(--muted); transform: translateX(-50%); font-variant-numeric: tabular-nums; }
+  .axis span.first { transform: none; }
+  ol.levers { margin: 0; padding-left: 20px; font-size: 13px; }
+  ol.levers li { margin: 4px 0; }
+  ol.levers li span { color: var(--ink2); }
+  .tip { position: absolute; z-index: 20; pointer-events: none; display: none; background: var(--popover, var(--surf)); color: var(--popover-foreground, var(--ink));
+         border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-size: 12px; max-width: 280px; box-shadow: 0 4px 14px rgba(0,0,0,.14);
+         font-family: var(--font-sans, system-ui, -apple-system, "Segoe UI", sans-serif); }
+  .tip .tv { font-weight: 650; font-size: 13px; }
+  .tip .tl { color: var(--muted-foreground, #52514e); }
+  @media (max-width: 720px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .viz-root { --lw: 150px; } }
+</style>
+</head>
+<body>
+<div class="viz-root" id="root">
+  <div class="kpis" id="kpis"></div>
+
+  <section class="card">
+    <h2>Where our core's power goes: mostly clocking storage that isn't doing anything</h2>
+    <p class="sub">Watts at 1 GHz, by how often each wire switches. Synthesis on the ASAP7 7 nm-class library, before layout.</p>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--c1)"></span>1.81 million flip-flops, clocked every tick</span>
+      <span><span class="sw" style="background:var(--c2)"></span>Other logic</span>
+    </div>
+    <div id="pwr"></div>
+    <p class="note">Vortex's default power method gives 18 W. It lets switching multiply through the arithmetic to about 2 toggles per wire per tick, which no real job does, so we don't use it.</p>
+  </section>
+
+  <section class="card">
+    <h2>Work per watt, small matrix job: roughly 10× behind a Jetson core</h2>
+    <p class="sub">Billions of operations per second per watt (GFLOPS/W), one core on a Jetson core's memory share. Bars show the range of the estimate.</p>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--ours)"></span>Our core: copy engine 64 deep, 875 MHz, 2.5–4 W</span>
+      <span><span class="sw" style="background:var(--nv)"></span>Jetson core, estimated</span>
+    </div>
+    <div id="perw"></div>
+    <p class="note">The Jetson figure combines its board's measured power under AI load (18–22 W, of which we take 50–70% for the GPU, split 8 ways) with the A100 core's work per tick from our yardstick. The comparison flatters us: our core sits on a newer-class process and leaves out the shared cache and memory controllers.</p>
+  </section>
+
+  <section class="card">
+    <h2>What to change in our own core, biggest first</h2>
+    <p class="sub">Each lever comes straight from these measurements.</p>
+    <ol class="levers">
+      <li><b>Clock gating:</b> switch off the clock to idle units. <span>80–94% of the power at realistic activity is idle storage being clocked.</span></li>
+      <li><b>Register files in dense memory, not flip-flops.</b> <span>The 1.81 million flip-flops are 34% of the logic area and most of the clock load.</span></li>
+      <li><b>A smaller general maths unit.</b> <span>It is 57% of the logic and almost idle in AI jobs.</span></li>
+      <li><b>A deeper copy engine.</b> <span>2.9× faster on realistic memory, for about 1% more storage cells.</span></li>
+    </ol>
+  </section>
+</div>
+<script>
+const root = document.getElementById('root');
+function luma(css) {
+  const c = document.createElement('canvas'); c.width = c.height = 1;
+  const x = c.getContext('2d'); x.fillStyle = '#808080'; x.fillStyle = css; x.fillRect(0, 0, 1, 1);
+  const d = x.getImageData(0, 0, 1, 1).data;
+  return d[3] < 10 ? null : 0.2126 * d[0] + 0.7152 * d[1] + 0.0722 * d[2];
+}
+function setMode() {
+  const cs = getComputedStyle(document.documentElement);
+  let l = luma(cs.backgroundColor);
+  if (l === null) l = luma(cs.getPropertyValue('--background').trim() || 'transparent');
+  if (l === null) l = matchMedia('(prefers-color-scheme: dark)').matches ? 0 : 255;
+  root.dataset.mode = l < 128 ? 'dark' : 'light';
+}
+setMode();
+new MutationObserver(setMode).observe(document.documentElement, { attributes: true });
+new MutationObserver(setMode).observe(document.head, { childList: true, subtree: true, characterData: true });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setMode);
+
+function el(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
+const tip = el('div', 'tip'); document.body.appendChild(tip);
+function showTip(x, y, tv, tl) {
+  tip.replaceChildren(el('div', 'tv', tv), el('div', 'tl', tl)); tip.style.display = 'block';
+  const maxX = document.documentElement.clientWidth + window.scrollX - tip.offsetWidth - 4;
+  tip.style.left = Math.max(4, Math.min(x + 12, maxX)) + 'px';
+  tip.style.top = Math.max(4, y - tip.offsetHeight - 10) + 'px';
+}
+function hover(t, tv, tl) {
+  t.tabIndex = 0; t.setAttribute('aria-label', tv + '. ' + tl);
+  t.addEventListener('pointermove', e => showTip(e.pageX, e.pageY, tv, tl));
+  t.addEventListener('pointerleave', () => { tip.style.display = 'none'; });
+  t.addEventListener('focus', () => { const r = t.getBoundingClientRect(); showTip(r.left + window.scrollX + r.width / 3, r.top + window.scrollY, tv, tl); });
+  t.addEventListener('blur', () => { tip.style.display = 'none'; });
+}
+
+[['1.65 mm²', 'our core before layout: 1.53 mm² logic + 0.11 mm² memory blocks (about 2.3 mm² once placed)'],
+ ['875 MHz', 'top speed; misses its 1 GHz target by 0.14 ns'],
+ ['2.1–2.9 W', 'at 1 GHz, for realistic switching (2–10%)'],
+ ['~10×', 'behind a Jetson core on work per watt (range 5–20×, estimate)']].forEach(([v, l]) => {
+  const t = el('div', 'tile'); t.append(el('div', 't-value', v), el('div', 't-label', l));
+  document.getElementById('kpis').append(t);
+});
+
+function axisRows(host, ticks, at, fmt) {
+  const ax = el('div', 'axis');
+  ticks.forEach((t, i) => { const s = el('span', i ? null : 'first', fmt(t)); s.style.left = at(t); ax.append(s); });
+  host.append(ax);
+}
+
+(function () {
+  const D = [['2% switching', 2.01, 0.12], ['5% switching', 2.18, 0.30], ['10% switching', 2.26, 0.59], ['20% switching', 2.58, 1.20]];
+  const MAX = 4, RES = 70, TICKS = [0, 1, 2, 3, 4];
+  const at = v => `calc((100% - ${RES}px) * ${v / MAX})`;
+  const host = document.getElementById('pwr');
+  const rows = el('div', 'rows'); const gl = el('div', 'gridlayer');
+  TICKS.forEach((t, i) => { const g = el('div', 'gl' + (i ? '' : ' base')); g.style.left = at(t); gl.append(g); });
+  rows.append(gl);
+  D.forEach(([name, ff, lg]) => {
+    const row = el('div', 'row'); row.append(el('div', 'r-label', name));
+    const p = el('div', 'r-plot');
+    const f1 = el('div', 'fill'); f1.style.width = `calc(${at(ff)} - 2px)`; f1.style.background = 'var(--c1)'; f1.style.borderRadius = '0'; p.append(f1);
+    const f2 = el('div', 'fill'); f2.style.left = at(ff); f2.style.width = at(lg); f2.style.background = 'var(--c2)'; p.append(f2);
+    const lab = el('span', 'val', (ff + lg).toFixed(2) + ' W'); lab.style.left = `calc(${at(ff + lg)} + 6px)`; p.append(lab);
+    hover(p, (ff + lg).toFixed(2) + ' W at 1 GHz', 'Flip-flops ' + ff.toFixed(2) + ' W (' + Math.round(100 * ff / (ff + lg)) + '%), other logic ' + lg.toFixed(2) + ' W; ' + name);
+    row.append(p); rows.append(row);
+  });
+  host.append(rows);
+  axisRows(host, TICKS, at, t => t + ' W');
+})();
+
+(function () {
+  const D = [['Ours, standard setting', 20, 31, 'var(--ours)', '44.9 multiply-adds per tick at 875 MHz = 79 GFLOPS, over 2.5–4 W', true],
+             ['Ours, best setting', 31, 49, 'var(--ours)', '69.8 per tick at 875 MHz = 122 GFLOPS, over 2.5–4 W', true],
+             ['Jetson core (estimate)', 240, 410, 'var(--nv)', 'About 223 per tick at 1,020 MHz = 455 GFLOPS, over about 1.1–1.9 W', false]];
+  const MAX = 450, RES = 80, TICKS = [0, 100, 200, 300, 400];
+  const at = v => `calc((100% - ${RES}px) * ${v / MAX})`;
+  const host = document.getElementById('perw');
+  const rows = el('div', 'rows'); const gl = el('div', 'gridlayer');
+  TICKS.forEach((t, i) => { const g = el('div', 'gl' + (i ? '' : ' base')); g.style.left = at(t); gl.append(g); });
+  rows.append(gl);
+  D.forEach(([name, lo, hi, color, tl, ours]) => {
+    const row = el('div', 'row' + (ours ? ' ours' : '')); row.append(el('div', 'r-label', name));
+    const p = el('div', 'r-plot');
+    const f = el('div', 'fill'); f.style.left = at(lo); f.style.width = `calc(${at(hi)} - ${at(lo)})`; f.style.background = color; f.style.borderRadius = '4px'; p.append(f);
+    const lab = el('span', 'val', lo + '–' + hi); lab.style.left = `calc(${at(hi)} + 6px)`; p.append(lab);
+    hover(p, lo + '–' + hi + ' GFLOPS per watt', tl);
+    row.append(p); rows.append(row);
+  });
+  host.append(rows);
+  axisRows(host, TICKS, at, t => String(t));
+})();
+</script>
+</body>
+</html>

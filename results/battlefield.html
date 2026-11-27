@@ -118,6 +118,28 @@
   </section>
 
   <section class="card">
+    <h2>Where our core's power goes: mostly clocking storage that isn't doing anything</h2>
+    <p class="sub">Watts at 1 GHz, by how often each wire switches (synthesis on the ASAP7 7 nm-class library, before layout).</p>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--c1)"></span>1.81 million flip-flops, clocked every tick</span>
+      <span><span class="sw" style="background:var(--c2)"></span>Other logic</span>
+    </div>
+    <div id="pwr"></div>
+    <p class="note"><b>The biggest lever is clock gating:</b> real GPUs switch off the clock to idle units, and this open-source flow doesn't. A third of the core's area is flip-flops, because register files are built from them instead of dense memory. Vortex's default power method gives 18 W. It assumes switching multiplies through the arithmetic to about 2 toggles per wire per tick, so we don't use it.</p>
+  </section>
+
+  <section class="card">
+    <h2>Work per watt, small matrix job: roughly 10× behind a Jetson core</h2>
+    <p class="sub">Billions of operations per second per watt (GFLOPS/W), one core on a Jetson core's memory share. Bars show the range of the estimate.</p>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--ours)"></span>Our core (copy engine 64 deep, 875 MHz, 2.5–4 W)</span>
+      <span><span class="sw" style="background:var(--nv)"></span>Jetson core, estimated</span>
+    </div>
+    <div id="perw"></div>
+    <p class="note">The Jetson core's figure comes from two things. Its board's measured power under AI load is 18–22 W, of which we take 50–70% as the GPU's share, split 8 ways. Its work per tick is the A100 core's from our yardstick. The comparison flatters us: our core sits on a newer-class process and leaves out the shared cache and memory controllers.</p>
+  </section>
+
+  <section class="card">
     <h2>Attention barely notices the memory: 8.5 → 6.3 per tick</h2>
     <p class="sub">Multiply-adds per clock tick for one core, 128 tokens, head size 64.</p>
     <div class="legend">
@@ -168,8 +190,8 @@ function hover(t, tv, tl) {
 // KPIs
 [['5×', 'slower: our matrix job on a Jetson core’s real share of memory (74 → 16 multiply-adds per tick)'],
  ['2.9×', 'back, by letting the copy engine keep 64 reads in flight, not 8 (16 → 45); the Verilog model agrees within 0.4%'],
- ['3–5×', 'behind a Jetson core on small matrix jobs after that fix (estimate; 10–14× before it)'],
- ['15–40×', 'behind NVIDIA cores on attention; memory barely matters there (8.5 → 6.3 per tick)']].forEach(([v, l]) => {
+ ['~10×', 'behind a Jetson core on work per watt (range 5–20×, estimate), on the small matrix job'],
+ ['2.1–2.9 W', 'our core at 1 GHz (1.65 mm², 875 MHz top speed); most of it clocks 1.8 million storage cells, busy or not']].forEach(([v, l]) => {
   const t = el('div', 'tile'); t.append(el('div', 't-value', v), el('div', 't-label', l));
   document.getElementById('kpis').append(t);
 });
@@ -180,6 +202,7 @@ function hover(t, tv, tl) {
  ['AI maths per core per tick', '1,024 fp16 multiply-adds: the same as our core'],
  ['Memory per core', '12.5 bytes per tick (102 GB/s ÷ 8 at 1,020 MHz), about 400 ticks away'],
  ['Measured power', 'Object detection 146 images/s at 11 W; small chat models 25–38 tokens/s at 13–21 W'],
+ ['Our core (synthesis)', '1.65 mm² before layout, 875 MHz, 2.1–2.9 W at 1 GHz (ASAP7, 7 nm-class)'],
  ['Next from NVIDIA', 'Orin Nano 2, first half of 2027: about 2× (NVIDIA’s claim)']].forEach(([k, a]) => {
   const tr = el('tr'); tr.append(el('th', null, k)); const td = el('td', 'num', a); tr.append(td);
   document.getElementById('spec').append(tr);
@@ -230,6 +253,55 @@ bars('att', [
   ['NVIDIA T4 core (2018)', 116, 'var(--nv)', 'Measured: 18× ours', false],
   ['NVIDIA A100 core ≈ Jetson core', 245, 'var(--nv)', 'Measured: 39× ours', false],
 ], 260, [0, 65, 130, 195, 260]);
+
+// Stacked bars: power by activity
+(function () {
+  const D = [['2% switching', 2.01, 0.12], ['5% switching', 2.18, 0.30], ['10% switching', 2.26, 0.59], ['20% switching', 2.58, 1.20]];
+  const MAX = 4, RES = 70, TICKS = [0, 1, 2, 3, 4];
+  const at = v => `calc((100% - ${RES}px) * ${v / MAX})`;
+  const host = document.getElementById('pwr');
+  const rows = el('div', 'rows'); const gl = el('div', 'gridlayer');
+  TICKS.forEach((t, i) => { const g = el('div', 'gl' + (i ? '' : ' base')); g.style.left = at(t); gl.append(g); });
+  rows.append(gl);
+  D.forEach(([name, ff, lg]) => {
+    const row = el('div', 'row'); row.append(el('div', 'r-label', name));
+    const p = el('div', 'r-plot');
+    const f1 = el('div', 'fill'); f1.style.width = `calc(${at(ff)} - 2px)`; f1.style.background = 'var(--c1)'; f1.style.borderRadius = '0'; p.append(f1);
+    const f2 = el('div', 'fill'); f2.style.left = at(ff); f2.style.width = at(lg); f2.style.background = 'var(--c2)'; p.append(f2);
+    const lab = el('span', 'val', (ff + lg).toFixed(2) + ' W'); lab.style.left = `calc(${at(ff + lg)} + 6px)`; p.append(lab);
+    hover(p, (ff + lg).toFixed(2) + ' W at 1 GHz', 'Flip-flops ' + ff.toFixed(2) + ' W (' + Math.round(100 * ff / (ff + lg)) + '%), other logic ' + lg.toFixed(2) + ' W; ' + name);
+    row.append(p); rows.append(row);
+  });
+  host.append(rows);
+  const ax = el('div', 'axis');
+  TICKS.forEach((t, i) => { const s = el('span', i ? null : 'first', t + ' W'); s.style.left = at(t); ax.append(s); });
+  host.append(ax);
+})();
+
+// Range bars: work per watt
+(function () {
+  const D = [['Ours, standard setting', 20, 31, 'var(--ours)', '44.9 multiply-adds per tick at 875 MHz = 79 GFLOPS, over 2.5–4 W', true],
+             ['Ours, best setting', 31, 49, 'var(--ours)', '69.8 per tick at 875 MHz = 122 GFLOPS, over 2.5–4 W', true],
+             ['Jetson core (estimate)', 240, 410, 'var(--nv)', 'About 223 per tick at 1,020 MHz = 455 GFLOPS, over about 1.1–1.9 W', false]];
+  const MAX = 450, RES = 80, TICKS = [0, 100, 200, 300, 400];
+  const at = v => `calc((100% - ${RES}px) * ${v / MAX})`;
+  const host = document.getElementById('perw');
+  const rows = el('div', 'rows'); const gl = el('div', 'gridlayer');
+  TICKS.forEach((t, i) => { const g = el('div', 'gl' + (i ? '' : ' base')); g.style.left = at(t); gl.append(g); });
+  rows.append(gl);
+  D.forEach(([name, lo, hi, color, tl, ours]) => {
+    const row = el('div', 'row' + (ours ? ' ours' : '')); row.append(el('div', 'r-label', name));
+    const p = el('div', 'r-plot');
+    const f = el('div', 'fill'); f.style.left = at(lo); f.style.width = `calc(${at(hi)} - ${at(lo)})`; f.style.background = color; f.style.borderRadius = '4px'; p.append(f);
+    const lab = el('span', 'val', lo + '–' + hi); lab.style.left = `calc(${at(hi)} + 6px)`; p.append(lab);
+    hover(p, lo + '–' + hi + ' GFLOPS per watt', tl);
+    row.append(p); rows.append(row);
+  });
+  host.append(rows);
+  const ax = el('div', 'axis');
+  TICKS.forEach((t, i) => { const s = el('span', i ? null : 'first', String(t)); s.style.left = at(t); ax.append(s); });
+  host.append(ax);
+})();
 
 // Line chart: copy-engine depth
 (function () {

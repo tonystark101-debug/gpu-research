@@ -1,0 +1,108 @@
+
+24. Printing statistics.
+
+=== VX_core_top ===
+
+        +----------Local Count, excluding submodules.
+        |        +-Local Area, excluding submodules.
+        |        | 
+ 1.46E+07        - wires
+ 1.52E+07        - wire bits
+    13807        - public wires
+   603837        - public wire bits
+       46        - ports
+    10633        - port bits
+ 1.48E+07 1.53E+06 cells
+   629054  5.5E+04   A2O1A1Ixp33_ASAP7_75t_R
+   137035  1.8E+04   A2O1A1O1Ixp25_ASAP7_75t_R
+    58497 5.12E+03   AND2x2_ASAP7_75t_R
+    38889  3402.01   AND3x1_ASAP7_75t_R
+    21360 2.18E+03   AND4x1_ASAP7_75t_R
+    13027 1.52E+03   AND5x1_ASAP7_75t_R
+       32    7.465   AO211x2_ASAP7_75t_R
+   142925 1.25E+04   AO21x1_ASAP7_75t_R
+      408   59.486   AO221x1_ASAP7_75t_R
+       48    8.398   AO222x2_ASAP7_75t_R
+       40    5.249   AO22x1_ASAP7_75t_R
+     1142  133.203   AO32x1_ASAP7_75t_R
+       52    7.582   AO33x2_ASAP7_75t_R
+    22547 1.97E+03   AOI211xp5_ASAP7_75t_R
+        4    0.467   AOI21x1_ASAP7_75t_R
+   468889 3.42E+04   AOI21xp33_ASAP7_75t_R
+     6597  480.921   AOI21xp5_ASAP7_75t_R
+     9833    1E+03   AOI221xp5_ASAP7_75t_R
+      100    14.58   AOI222xp33_ASAP7_75t_R
+     4462  390.336   AOI22xp33_ASAP7_75t_R
+    10954 1.12E+03   AOI311xp33_ASAP7_75t_R
+    34451 3.01E+03   AOI31xp33_ASAP7_75t_R
+      128   24.261   AOI31xp67_ASAP7_75t_R
+     3020  352.253   AOI321xp33_ASAP7_75t_R
+     8481  865.571   AOI32xp33_ASAP7_75t_R
+       25    2.916   AOI33xp33_ASAP7_75t_R
+     2751  200.548   BUFx2_ASAP7_75t_R
+       97    8.486   BUFx3_ASAP7_75t_R
+  1810691 5.28E+05   DFFHQNx1_ASAP7_75t_R
+  1278654 7.46E+04   HB1xp67_ASAP7_75t_R
+    89547 3.92E+03   INVx1_ASAP7_75t_R
+        8    0.467   INVx2_ASAP7_75t_R
+   820952 3.59E+04   INVxp33_ASAP7_75t_R
+    44169 1.93E+03   INVxp67_ASAP7_75t_R
+   391963    4E+04   MAJIxp5_ASAP7_75t_R
+    64550 8.47E+03   MAJx2_ASAP7_75t_R
+       10    0.875   NAND2x1_ASAP7_75t_R
+        2    0.233   NAND2x1p5_ASAP7_75t_R
+  1652357 9.64E+04   NAND2xp33_ASAP7_75t_R
+     9701  565.762   NAND2xp5_ASAP7_75t_R
+        1     0.16   NAND3x1_ASAP7_75t_R
+        1    0.292   NAND3x2_ASAP7_75t_R
+   143361 1.05E+04   NAND3xp33_ASAP7_75t_R
+    70680 6.18E+03   NAND4xp25_ASAP7_75t_R
+      148    30.21   NAND4xp75_ASAP7_75t_R
+    28966  2956.27   NAND5xp2_ASAP7_75t_R
+       17    1.487   NOR2x1_ASAP7_75t_R
+        1    0.117   NOR2x1p5_ASAP7_75t_R
+  1347663 7.86E+04   NOR2xp33_ASAP7_75t_R
+      177   15.484   NOR2xp67_ASAP7_75t_R
+        2    0.321   NOR3x1_ASAP7_75t_R
+        1    0.292   NOR3x2_ASAP7_75t_R
+   174226 1.27E+04   NOR3xp33_ASAP7_75t_R
+    71805 6.28E+03   NOR4xp25_ASAP7_75t_R
+        1    0.204   NOR4xp75_ASAP7_75t_R
+    29868 3.05E+03   NOR5xp2_ASAP7_75t_R
+   633125 5.54E+04   O2A1O1Ixp33_ASAP7_75t_R
+       43    5.016   O2A1O1Ixp5_ASAP7_75t_R
+     3141  366.366   OA211x2_ASAP7_75t_R
+    40377 4.12E+03   OA21x2_ASAP7_75t_R
+      160   27.994   OA222x2_ASAP7_75t_R
+     2693  392.639   OA22x2_ASAP7_75t_R
+      128   18.662   OA33x2_ASAP7_75t_R
+    42457 3.71E+03   OAI211xp5_ASAP7_75t_R
+      121   14.113   OAI21x1_ASAP7_75t_R
+   674111 4.91E+04   OAI21xp33_ASAP7_75t_R
+  1489145 1.09E+05   OAI21xp5_ASAP7_75t_R
+    23844 2.43E+03   OAI221xp5_ASAP7_75t_R
+     2168  316.094   OAI222xp33_ASAP7_75t_R
+    46754  4090.04   OAI22xp33_ASAP7_75t_R
+      175   15.309   OAI22xp5_ASAP7_75t_R
+     5466   557.86   OAI311xp33_ASAP7_75t_R
+    70378 6.16E+03   OAI31xp33_ASAP7_75t_R
+        2    0.379   OAI31xp67_ASAP7_75t_R
+     4100  478.224   OAI321xp33_ASAP7_75t_R
+     2800  285.768   OAI32xp33_ASAP7_75t_R
+      390    45.49   OAI33xp33_ASAP7_75t_R
+   398447 3.49E+04   OR2x2_ASAP7_75t_R
+   135076 1.18E+04   OR3x1_ASAP7_75t_R
+    16619  1.7E+03   OR4x1_ASAP7_75t_R
+     7838  914.224   OR5x1_ASAP7_75t_R
+       64        -   VX_dp_ram_asic
+      575   92.219   XNOR2x2_ASAP7_75t_R
+  1094193 1.44E+05   XNOR2xp5_ASAP7_75t_R
+   411642  5.4E+04   XOR2xp5_ASAP7_75t_R
+
+   Area for cell type \VX_dp_ram_asic is unknown!
+
+   Chip area for module '\VX_core_top': 1534679.937884
+     of which used for sequential elements: 527997.495595 (34.40%)
+
+   Estimated number of transistors:          0+
+

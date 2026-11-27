@@ -20,7 +20,11 @@ We're a small team designing GPU and AI-accelerator hardware in the open. We sta
   - It's an existing setting, and costs about 1% of the core's storage cells.
   - **The Verilog model agrees:** 264,625 vs 267,244 ticks at 8 in flight, and 92,951 vs 93,365 at 64.
 - **Where that leaves us against a Jetson core** (estimated from the A100 core we measured, which has the same AI maths per tick): about 3–5× behind on small matrix jobs with the deeper copy engine, and 15–40× behind on attention.
-- **Chip size and watts:** a full synthesis of the core (Yosys + OpenSTA, ASAP7) is running; [docs/honest-numbers.md](docs/honest-numbers.md) will be updated.
+- **Chip size and watts** (full synthesis with Vortex's open-source flow: Yosys + OpenSTA on ASAP7):
+  - **1.65 mm²** before layout and **875 MHz**.
+  - **2.1–2.9 W at 1 GHz** for realistic switching. Most of that clocks 1.81 million flip-flops, busy or not; the flow adds no clock gating.
+  - **Roughly 5–20× behind a Jetson core on work per watt.**
+  - The next levers: clock gating, register files in dense memory, a smaller FPU, and the deeper copy engine. Page: [results/battlefield-power.html](results/battlefield-power.html).
 
 Write-up: [docs/honest-numbers.md](docs/honest-numbers.md). Page: [results/battlefield.html](results/battlefield.html). Runs: [runs/battlefield/](runs/battlefield/). Scripts: `scripts/bf_*.sh`.
 
@@ -167,9 +171,9 @@ Each design lives in its own repository, as Tiny Tapeout requires: [tt-minitenso
 
 ## Next
 
-1. **Chip size and power** of our core: synthesis is running (ASAP7, Yosys + OpenSTA, power from recorded activity).
-2. **Run one real AI model end to end** on our core: one vision model and one small chat model that people run on a Jetson.
-3. **Find the next limit** after the deeper copy engine, and **offer the attention fix and the copy-engine depth to Vortex**.
+1. **Run one real AI model end to end** on our core: one vision model and one small chat model that people run on a Jetson.
+2. **Start our own AI-first core:** clock gating, register files in dense memory, a smaller FPU, and the deeper copy engine.
+3. **Offer the attention fix and the copy-engine depth to Vortex.**
 4. **First FPGA run**, for real clock speed and power.
 
 ## License and credits

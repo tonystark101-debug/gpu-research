@@ -1,0 +1,279 @@
+make -C .. timing PREFIX=bf_core \
+  TOP_LEVEL_ENTITY=VX_core_top \
+  EXTRA_INCLUDE="-I/home/User/vortex_bf/hw/unittest/core" \
+  EXTRA_CONFIGS=" -DVX_CFG_DXA_SCATTER_COALESCE  -DVX_CFG_EXT_A_ENABLE  -DVX_CFG_EXT_C_ENABLE  -DVX_CFG_EXT_DXA_ENABLE  -DVX_CFG_EXT_TCU_ENABLE  -DVX_CFG_EXT_TFU_ENABLE  -DVX_CFG_EXT_ZFHMIN_ENABLE  -DVX_CFG_ISSUE_WIDTH=4  -DVX_CFG_NUM_THREADS=32  -DVX_CFG_NUM_WARPS=8  -DVX_CFG_TCU_WGMMA_ENABLE"
+make[1]: Entering directory '/home/User/vortex_bf/build_bf/hw/syn/yosys'
+/home/User/vortex_bf/build_bf/hw/syn/libs/asap7/install.sh --install-dir=/home/User/vortex_bf/build_bf/hw/syn/libs/asap7 --vt=rvt
+ASAP7 rvt collateral is already installed in /home/User/vortex_bf/build_bf/hw/syn/libs/asap7
+cd bf_core_VX_core_top; TOP=VX_core_top \
+SRC_FILE=sources.txt \
+SDC_FILE=/home/User/vortex_bf/hw/syn/yosys/project.sdc \
+BB_MODULES="VX_dp_ram_asic,VX_sp_ram_asic" \
+CLOCK_FREQ=1000 \
+DELAY_UNC=0.02 \
+DELAY_IO=0.05 \
+DFF_DONT_USE="*DFFHQx4* *DFFLQx4*" \
+ABC_DRIVER_CELL=BUFx4_ASAP7_75t_R \
+ABC_LOAD=5.0 \
+YOSYS_FLATTEN=1 \
+YOSYS_SHARE=0 \
+SAIF_FILE="" \
+SAIF_INST="" \
+PDK=asap7 \
+LIB_TGT=/home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib \
+TOOL_DIR=/home/User/vortex_bf/hw/scripts \
+RUN_STA=1 \
+/home/User/vortex_bf/hw/syn/yosys/run_synth.sh
+[run_synth] TOP=VX_core_top  RUN_SYNTH=1 RUN_MAP=1 RUN_STA=1
+[run_synth] PDK=asap7  Liberty=1
+[run_synth] Sources=299  Incdirs=1  Defines=28
+[run_synth] ABC_PERIOD=1000.0 ps
+[run_synth] Resolved SDC: out/VX_core_top.resolved.sdc
+[run_synth] ABC constraints: out/VX_core_top.abc.constr
+[run_synth] Writing out/synth.ys
+TIME gen-ys            stage=00:00:00  total=00:00:00
+[run_synth] /home/User/tools/yosys/bin/yosys -q -s out/synth.ys -l reports/yosys.log
+TIME yosys             stage=05:58:17  total=05:58:17
+TIME strip-signed      stage=00:00:00  total=05:58:17
+stripped parameters from 64 black-box instances
+TIME strip-bb-params   stage=00:00:48  total=05:59:06
+[run_synth] Running SRAM Area Estimator...
+
+================================================================================
+SRAM AREA ESTIMATION (Connectivity Inference)
+  Top Module  : VX_core_top
+  Target RAMs : ['VX_sp_ram_asic', 'VX_dp_ram_asic']
+  Scanning    : Data Ports=['wdata', 'rdata'] | Addr Ports=['addr', 'waddr', 'raddr']
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+TOTAL SRAM ESTIMATED AREA: 111257.6000 um^2
+================================================================================
+
+[run_synth] TOP=VX_core_top NETLIST=out/VX_core_top_mapped.v LIB_TGT=/home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib LIB_ROOT= SDC_FILE=out/VX_core_top.resolved.sdc RPT_DIR=reports SAIF_FILE= SAIF_INST= /home/User/tools/sta/bin/sta /home/User/vortex_bf/hw/syn/yosys/run_sta.tcl
+OpenSTA 3.1.0 2f6ccdaeee Copyright (c) 2026, Parallax Software, Inc.
+License GPLv3: GNU GPL version 3 <http://gnu.org/licenses/gpl.html>
+
+This is free software, and you are free to change and redistribute it
+under certain conditions; type `show_copying' for details. 
+This program comes with ABSOLUTELY NO WARRANTY; for details type `show_warranty'.
+read_liberty /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 19966, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 19999, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 20032, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 20065, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 20098, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 20131, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 20164, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 21560, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 21593, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 21626, timing group from output port.
+read_verilog out/VX_core_top_mapped.v
+link_design VX_core_top
+Warning 198: out/VX_core_top_mapped.v line 94086364, module VX_dp_ram_asic not found. Creating black box for \core.mem_unit.lmem_unit.g_data_store[0].g_dual_port.lmem_store.ram_a.g_asic.dp_ram_asic .
+read_sdc out/VX_core_top.resolved.sdc
+INFO: Using clock port: clk
+INFO: Found reset ports: _004d371453580000_p_Port
+ time 1ns
+ capacitance 1fF
+ resistance 1kohm
+ voltage 1v
+ current 1mA
+ power 1pW
+ distance 1um
+Clock                   Period          Waveform
+----------------------------------------------------
+clk                       1.00        0.00      0.50
+ext_clk                   1.00        0.00      0.50
+wns max -0.1430
+tns max -2737.5918
+worst slack max -0.1430
+Startpoint: _28826768_ (rising edge-triggered flip-flop clocked by clk)
+Endpoint: _28936052_ (rising edge-triggered flip-flop clocked by clk)
+Path Group: clk
+Path Type: max
+
+   Delay     Time   Description
+-----------------------------------------------------------
+   0.000    0.000   clock clk (rise edge)
+   0.000    0.000   clock network delay (ideal)
+   0.000    0.000 ^ _28826768_/CLK (DFFHQNx1_ASAP7_75t_R)
+   0.064    0.064 ^ _28826768_/QN (DFFHQNx1_ASAP7_75t_R)
+   0.025    0.089 ^ _19663597_/Y (XNOR2xp5_ASAP7_75t_R)
+   0.022    0.110 v _19663600_/Y (AOI31xp33_ASAP7_75t_R)
+   0.042    0.152 ^ _19663609_/Y (OAI31xp67_ASAP7_75t_R)
+   0.037    0.189 v _19663610_/Y (NAND2x1_ASAP7_75t_R)
+   0.021    0.210 ^ _19663611_/Y (INVx2_ASAP7_75t_R)
+   0.020    0.231 v _19663612_/Y (NOR2x1p5_ASAP7_75t_R)
+   0.028    0.259 ^ _19663613_/Y (NAND3x2_ASAP7_75t_R)
+   0.015    0.274 v _19663685_/Y (NOR2x1_ASAP7_75t_R)
+   0.072    0.346 ^ _19663686_/Y (A2O1A1O1Ixp25_ASAP7_75t_R)
+   0.045    0.391 ^ _19663687_/Y (OR2x2_ASAP7_75t_R)
+   0.013    0.404 v _19663697_/Y (OAI22xp5_ASAP7_75t_R)
+   0.037    0.441 v _19663698_/Y (AO21x1_ASAP7_75t_R)
+   0.039    0.479 v _19663731_/Y (MAJx2_ASAP7_75t_R)
+   0.013    0.492 ^ _19663784_/Y (NAND3xp33_ASAP7_75t_R)
+   0.032    0.525 v _19663785_/Y (OAI211xp5_ASAP7_75t_R)
+   0.030    0.555 ^ _19663835_/Y (NAND2xp5_ASAP7_75t_R)
+   0.024    0.579 v _19663855_/Y (NOR2xp33_ASAP7_75t_R)
+   0.027    0.606 ^ _19663856_/Y (XNOR2xp5_ASAP7_75t_R)
+   0.027    0.632 ^ _19663857_/Y (XOR2xp5_ASAP7_75t_R)
+   0.025    0.657 v _19663879_/Y (NAND5xp2_ASAP7_75t_R)
+   0.069    0.726 ^ _19664134_/Y (OAI311xp33_ASAP7_75t_R)
+   0.036    0.762 v _19664308_/Y (NAND5xp2_ASAP7_75t_R)
+   0.082    0.844 ^ _19664312_/Y (AOI311xp33_ASAP7_75t_R)
+   0.048    0.892 v _19664466_/Y (NAND2x1_ASAP7_75t_R)
+   0.065    0.957 ^ _19664467_/Y (AOI21x1_ASAP7_75t_R)
+   0.026    0.983 v _23198818_/Y (NAND2x1p5_ASAP7_75t_R)
+   0.031    1.014 v _23198877_/Y (BUFx2_ASAP7_75t_R)
+   0.037    1.051 v _23199012_/Y (HB1xp67_ASAP7_75t_R)
+   0.022    1.073 ^ _23199027_/Y (NOR2xp33_ASAP7_75t_R)
+   0.014    1.087 v _23199028_/Y (A2O1A1Ixp33_ASAP7_75t_R)
+   0.015    1.101 ^ _23199029_/Y (OAI21xp5_ASAP7_75t_R)
+   0.000    1.101 ^ _28936052_/D (DFFHQNx1_ASAP7_75t_R)
+            1.101   data arrival time
+
+   1.000    1.000   clock clk (rise edge)
+   0.000    1.000   clock network delay (ideal)
+  -0.020    0.980   clock uncertainty
+   0.000    0.980   clock reconvergence pessimism
+            0.980 ^ _28936052_/CLK (DFFHQNx1_ASAP7_75t_R)
+  -0.022    0.958   library setup time
+            0.958   data required time
+-----------------------------------------------------------
+            0.958   data required time
+           -1.101   data arrival time
+-----------------------------------------------------------
+           -0.143   slack (VIOLATED)
+
+
+Startpoint: _29299644_ (rising edge-triggered flip-flop clocked by clk)
+Endpoint: icache_rsp_ready[0] (output port clocked by ext_clk)
+Path Group: ext_clk
+Path Type: max
+
+   Delay     Time   Description
+-----------------------------------------------------------
+   0.000    0.000   clock clk (rise edge)
+   0.000    0.000   clock network delay (ideal)
+   0.000    0.000 ^ _29299644_/CLK (DFFHQNx1_ASAP7_75t_R)
+   0.058    0.058 ^ _29299644_/QN (DFFHQNx1_ASAP7_75t_R)
+   0.044    0.103 ^ _19738597_/Y (HB1xp67_ASAP7_75t_R)
+   0.021    0.123 v _19738641_/Y (NOR2xp33_ASAP7_75t_R)
+   0.035    0.159 ^ _19738642_/Y (AOI21xp33_ASAP7_75t_R)
+   0.020    0.179 v _19738643_/Y (XOR2xp5_ASAP7_75t_R)
+   0.028    0.207 ^ _19738644_/Y (NOR4xp25_ASAP7_75t_R)
+   0.025    0.232 v _19738661_/Y (NAND5xp2_ASAP7_75t_R)
+   0.037    0.269 ^ _19738726_/Y (NOR4xp25_ASAP7_75t_R)
+   0.033    0.301 ^ _19738743_/Y (OR5x1_ASAP7_75t_R)
+   0.017    0.318 ^ _19738744_/Y (AO21x1_ASAP7_75t_R)
+   0.041    0.359 ^ _19738745_/Y (HB1xp67_ASAP7_75t_R)
+   0.030    0.389 v _19849575_/Y (INVxp67_ASAP7_75t_R)
+   0.059    0.448 ^ _19849576_/Y (NOR2xp33_ASAP7_75t_R)
+   0.053    0.500 v _19849580_/Y (NAND2xp5_ASAP7_75t_R)
+   0.028    0.528 ^ _25179198_/Y (AOI311xp33_ASAP7_75t_R)
+   0.019    0.547 v _25179199_/Y (AOI22xp33_ASAP7_75t_R)
+   0.012    0.559 ^ _26862225_/Y (NAND2xp5_ASAP7_75t_R)
+   0.000    0.559 ^ icache_rsp_ready[0] (out)
+            0.559   data arrival time
+
+   1.000    1.000   clock ext_clk (rise edge)
+   0.000    1.000   clock network delay (ideal)
+   0.000    1.000   clock reconvergence pessimism
+  -0.050    0.950   output external delay
+            0.950   data required time
+-----------------------------------------------------------
+            0.950   data required time
+           -0.559   data arrival time
+-----------------------------------------------------------
+            0.391   slack (MET)
+
+
+Startpoint: _28658129_ (rising edge-triggered flip-flop clocked by clk)
+Endpoint: _28658128_ (rising edge-triggered flip-flop clocked by clk)
+Path Group: clk
+Path Type: min
+
+   Delay     Time   Description
+-----------------------------------------------------------
+   0.000    0.000   clock clk (rise edge)
+   0.000    0.000   clock network delay (ideal)
+   0.000    0.000 ^ _28658129_/CLK (DFFHQNx1_ASAP7_75t_R)
+   0.043    0.043 ^ _28658129_/QN (DFFHQNx1_ASAP7_75t_R)
+   0.008    0.051 v _19994314_/Y (INVx1_ASAP7_75t_R)
+   0.000    0.051 v _28658128_/D (DFFHQNx1_ASAP7_75t_R)
+            0.051   data arrival time
+
+   0.000    0.000   clock clk (rise edge)
+   0.000    0.000   clock network delay (ideal)
+   0.020    0.020   clock uncertainty
+   0.000    0.020   clock reconvergence pessimism
+            0.020 ^ _28658128_/CLK (DFFHQNx1_ASAP7_75t_R)
+   0.009    0.029   library hold time
+            0.029   data required time
+-----------------------------------------------------------
+            0.029   data required time
+           -0.051   data arrival time
+-----------------------------------------------------------
+            0.022   slack (MET)
+
+
+Startpoint: _29097448_ (rising edge-triggered flip-flop clocked by clk)
+Endpoint: dcr_rsp_valid (output port clocked by ext_clk)
+Path Group: ext_clk
+Path Type: min
+
+   Delay     Time   Description
+-----------------------------------------------------------
+   0.000    0.000   clock clk (rise edge)
+   0.000    0.000   clock network delay (ideal)
+   0.000    0.000 ^ _29097448_/CLK (DFFHQNx1_ASAP7_75t_R)
+   0.042    0.042 v _29097448_/QN (DFFHQNx1_ASAP7_75t_R)
+   0.007    0.049 ^ _14566815_/Y (INVx1_ASAP7_75t_R)
+   0.000    0.049 ^ dcr_rsp_valid (out)
+            0.049   data arrival time
+
+   0.000    0.000   clock ext_clk (rise edge)
+   0.000    0.000   clock network delay (ideal)
+   0.000    0.000   clock reconvergence pessimism
+  -0.050   -0.050   output external delay
+           -0.050   data required time
+-----------------------------------------------------------
+           -0.050   data required time
+           -0.049   data arrival time
+-----------------------------------------------------------
+            0.099   slack (MET)
+
+
+INFO: SAIF_FILE not provided; power is vectorless/default.
+STA done.
+TIME sta               stage=01:13:32  total=07:12:39
+
+DONE. Top: VX_core_top  |  RUN_SYNTH=1  RUN_MAP=1  RUN_STA=1
+TOTAL ELAPSED: 07:12:39
+synth_summary.csv  area=1534679.938 um^2  Fmax=874.891 MHz  WNS=-0.143 ns  cells=None
+make[1]: Leaving directory '/home/User/vortex_bf/build_bf/hw/syn/yosys'
+	Command being timed: "make core PREFIX=bf_core CONFIGS=-DVX_CFG_NUM_THREADS=32 -DVX_CFG_NUM_WARPS=8 -DVX_CFG_ISSUE_WIDTH=4 -DVX_CFG_EXT_TCU_ENABLE -DVX_CFG_TCU_WGMMA_ENABLE -DVX_CFG_EXT_DXA_ENABLE -DVX_CFG_DXA_SCATTER_COALESCE -DVX_CFG_EXT_TFU_ENABLE -DVX_CFG_EXT_ZFHMIN_ENABLE  CLOCK_FREQ=1000"
+	User time (seconds): 36373.46
+	System time (seconds): 617.38
+	Percent of CPU this job got: 142%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 7:12:39
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 58913620
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 12425
+	Minor (reclaiming a frame) page faults: 306423556
+	Voluntary context switches: 1038944
+	Involuntary context switches: 1500400
+	Swaps: 0
+	File system inputs: 18684936
+	File system outputs: 45724936
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+rc=0 wall=25959s
+SYNTH_DONE

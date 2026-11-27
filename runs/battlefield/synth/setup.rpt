@@ -1,0 +1,101 @@
+Startpoint: _28826768_ (rising edge-triggered flip-flop clocked by clk)
+Endpoint: _28936052_ (rising edge-triggered flip-flop clocked by clk)
+Path Group: clk
+Path Type: max
+
+   Delay     Time   Description
+-----------------------------------------------------------
+   0.000    0.000   clock clk (rise edge)
+   0.000    0.000   clock network delay (ideal)
+   0.000    0.000 ^ _28826768_/CLK (DFFHQNx1_ASAP7_75t_R)
+   0.064    0.064 ^ _28826768_/QN (DFFHQNx1_ASAP7_75t_R)
+   0.025    0.089 ^ _19663597_/Y (XNOR2xp5_ASAP7_75t_R)
+   0.022    0.110 v _19663600_/Y (AOI31xp33_ASAP7_75t_R)
+   0.042    0.152 ^ _19663609_/Y (OAI31xp67_ASAP7_75t_R)
+   0.037    0.189 v _19663610_/Y (NAND2x1_ASAP7_75t_R)
+   0.021    0.210 ^ _19663611_/Y (INVx2_ASAP7_75t_R)
+   0.020    0.231 v _19663612_/Y (NOR2x1p5_ASAP7_75t_R)
+   0.028    0.259 ^ _19663613_/Y (NAND3x2_ASAP7_75t_R)
+   0.015    0.274 v _19663685_/Y (NOR2x1_ASAP7_75t_R)
+   0.072    0.346 ^ _19663686_/Y (A2O1A1O1Ixp25_ASAP7_75t_R)
+   0.045    0.391 ^ _19663687_/Y (OR2x2_ASAP7_75t_R)
+   0.013    0.404 v _19663697_/Y (OAI22xp5_ASAP7_75t_R)
+   0.037    0.441 v _19663698_/Y (AO21x1_ASAP7_75t_R)
+   0.039    0.479 v _19663731_/Y (MAJx2_ASAP7_75t_R)
+   0.013    0.492 ^ _19663784_/Y (NAND3xp33_ASAP7_75t_R)
+   0.032    0.525 v _19663785_/Y (OAI211xp5_ASAP7_75t_R)
+   0.030    0.555 ^ _19663835_/Y (NAND2xp5_ASAP7_75t_R)
+   0.024    0.579 v _19663855_/Y (NOR2xp33_ASAP7_75t_R)
+   0.027    0.606 ^ _19663856_/Y (XNOR2xp5_ASAP7_75t_R)
+   0.027    0.632 ^ _19663857_/Y (XOR2xp5_ASAP7_75t_R)
+   0.025    0.657 v _19663879_/Y (NAND5xp2_ASAP7_75t_R)
+   0.069    0.726 ^ _19664134_/Y (OAI311xp33_ASAP7_75t_R)
+   0.036    0.762 v _19664308_/Y (NAND5xp2_ASAP7_75t_R)
+   0.082    0.844 ^ _19664312_/Y (AOI311xp33_ASAP7_75t_R)
+   0.048    0.892 v _19664466_/Y (NAND2x1_ASAP7_75t_R)
+   0.065    0.957 ^ _19664467_/Y (AOI21x1_ASAP7_75t_R)
+   0.026    0.983 v _23198818_/Y (NAND2x1p5_ASAP7_75t_R)
+   0.031    1.014 v _23198877_/Y (BUFx2_ASAP7_75t_R)
+   0.037    1.051 v _23199012_/Y (HB1xp67_ASAP7_75t_R)
+   0.022    1.073 ^ _23199027_/Y (NOR2xp33_ASAP7_75t_R)
+   0.014    1.087 v _23199028_/Y (A2O1A1Ixp33_ASAP7_75t_R)
+   0.015    1.101 ^ _23199029_/Y (OAI21xp5_ASAP7_75t_R)
+   0.000    1.101 ^ _28936052_/D (DFFHQNx1_ASAP7_75t_R)
+            1.101   data arrival time
+
+   1.000    1.000   clock clk (rise edge)
+   0.000    1.000   clock network delay (ideal)
+  -0.020    0.980   clock uncertainty
+   0.000    0.980   clock reconvergence pessimism
+            0.980 ^ _28936052_/CLK (DFFHQNx1_ASAP7_75t_R)
+  -0.022    0.958   library setup time
+            0.958   data required time
+-----------------------------------------------------------
+            0.958   data required time
+           -1.101   data arrival time
+-----------------------------------------------------------
+           -0.143   slack (VIOLATED)
+
+
+Startpoint: _29299644_ (rising edge-triggered flip-flop clocked by clk)
+Endpoint: icache_rsp_ready[0] (output port clocked by ext_clk)
+Path Group: ext_clk
+Path Type: max
+
+   Delay     Time   Description
+-----------------------------------------------------------
+   0.000    0.000   clock clk (rise edge)
+   0.000    0.000   clock network delay (ideal)
+   0.000    0.000 ^ _29299644_/CLK (DFFHQNx1_ASAP7_75t_R)
+   0.058    0.058 ^ _29299644_/QN (DFFHQNx1_ASAP7_75t_R)
+   0.044    0.103 ^ _19738597_/Y (HB1xp67_ASAP7_75t_R)
+   0.021    0.123 v _19738641_/Y (NOR2xp33_ASAP7_75t_R)
+   0.035    0.159 ^ _19738642_/Y (AOI21xp33_ASAP7_75t_R)
+   0.020    0.179 v _19738643_/Y (XOR2xp5_ASAP7_75t_R)
+   0.028    0.207 ^ _19738644_/Y (NOR4xp25_ASAP7_75t_R)
+   0.025    0.232 v _19738661_/Y (NAND5xp2_ASAP7_75t_R)
+   0.037    0.269 ^ _19738726_/Y (NOR4xp25_ASAP7_75t_R)
+   0.033    0.301 ^ _19738743_/Y (OR5x1_ASAP7_75t_R)
+   0.017    0.318 ^ _19738744_/Y (AO21x1_ASAP7_75t_R)
+   0.041    0.359 ^ _19738745_/Y (HB1xp67_ASAP7_75t_R)
+   0.030    0.389 v _19849575_/Y (INVxp67_ASAP7_75t_R)
+   0.059    0.448 ^ _19849576_/Y (NOR2xp33_ASAP7_75t_R)
+   0.053    0.500 v _19849580_/Y (NAND2xp5_ASAP7_75t_R)
+   0.028    0.528 ^ _25179198_/Y (AOI311xp33_ASAP7_75t_R)
+   0.019    0.547 v _25179199_/Y (AOI22xp33_ASAP7_75t_R)
+   0.012    0.559 ^ _26862225_/Y (NAND2xp5_ASAP7_75t_R)
+   0.000    0.559 ^ icache_rsp_ready[0] (out)
+            0.559   data arrival time
+
+   1.000    1.000   clock ext_clk (rise edge)
+   0.000    1.000   clock network delay (ideal)
+   0.000    1.000   clock reconvergence pessimism
+  -0.050    0.950   output external delay
+            0.950   data required time
+-----------------------------------------------------------
+            0.950   data required time
+           -0.559   data arrival time
+-----------------------------------------------------------
+            0.391   slack (MET)
+
+

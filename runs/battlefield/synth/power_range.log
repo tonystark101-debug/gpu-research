@@ -1,0 +1,91 @@
+OpenSTA 3.1.0 2f6ccdaeee Copyright (c) 2026, Parallax Software, Inc.
+License GPLv3: GNU GPL version 3 <http://gnu.org/licenses/gpl.html>
+
+This is free software, and you are free to change and redistribute it
+under certain conditions; type `show_copying' for details. 
+This program comes with ABSOLUTELY NO WARRANTY; for details type `show_warranty'.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 19966, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 19999, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 20032, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 20065, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 20098, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 20131, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 20164, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 21560, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 21593, timing group from output port.
+Warning 1212: /home/User/vortex_bf/build_bf/hw/syn/libs/asap7/lib/asap7_rvt_tt.lib line 21626, timing group from output port.
+Warning 198: /home/User/vortex_bf/build_bf/hw/syn/yosys/bf_core_VX_core_top/out/VX_core_top_mapped.v line 94086364, module VX_dp_ram_asic not found. Creating black box for \core.mem_unit.lmem_unit.g_data_store[0].g_dual_port.lmem_store.ram_a.g_asic.dp_ram_asic .
+INFO: Using clock port: clk
+INFO: Found reset ports: _c0b5c06f1b640000_p_Port
+=== ACTIVITY 0.02
+Group                  Internal  Switching    Leakage      Total
+                          Power      Power      Power      Power (Watts)
+----------------------------------------------------------------
+Sequential             2.00e+03   1.06e+01   4.21e-04   2.01e+03  94.4%
+Combinational          4.42e+01   7.32e+01   4.20e-04   1.17e+02   5.5%
+Clock                  0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
+Macro                  0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
+Pad                    0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
+----------------------------------------------------------------
+Total                  2.04e+03   8.62e+01   8.41e-04   2.13e+03 100.0%
+                          96.0%       4.0%       0.0%
+=== ACTIVITY 0.05
+Group                  Internal  Switching    Leakage      Total
+                          Power      Power      Power      Power (Watts)
+----------------------------------------------------------------
+Sequential             2.16e+03   2.66e+01   4.21e-04   2.18e+03  88.0%
+Combinational          1.08e+02   1.82e+02   4.20e-04   2.90e+02  11.7%
+Clock                  0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
+Macro                  0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
+Pad                    0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
+----------------------------------------------------------------
+Total                  2.27e+03   2.11e+02   8.41e-04   2.48e+03 100.0%
+                          91.5%       8.5%       0.0%
+=== ACTIVITY 0.10
+Group                  Internal  Switching    Leakage      Total
+                          Power      Power      Power      Power (Watts)
+----------------------------------------------------------------
+Sequential             2.21e+03   5.32e+01   4.21e-04   2.26e+03  79.5%
+Combinational          2.15e+02   3.64e+02   4.20e-04   5.80e+02  20.4%
+Clock                  0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
+Macro                  0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
+Pad                    0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
+----------------------------------------------------------------
+Total                  2.43e+03   4.22e+02   8.41e-04   2.85e+03 100.0%
+                          85.2%      14.8%       0.0%
+=== ACTIVITY 0.20
+Group                  Internal  Switching    Leakage      Total
+                          Power      Power      Power      Power (Watts)
+----------------------------------------------------------------
+Sequential             2.47e+03   1.06e+02   4.21e-04   2.58e+03  68.1%
+Combinational          4.31e+02   7.29e+02   4.20e-04   1.16e+03  30.7%
+Clock                  0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
+Macro                  0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
+Pad                    0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
+----------------------------------------------------------------
+Total                  2.94e+03   8.44e+02   8.41e-04   3.78e+03 100.0%
+                          77.7%      22.3%       0.0%
+POWER_RANGE_DONE
+	Command being timed: "/home/User/tools/sta/bin/sta -no_init -exit /home/User/bf_power_range.tcl"
+	User time (seconds): 3599.09
+	System time (seconds): 15.17
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:00:14
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 37129376
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 9834076
+	Voluntary context switches: 2
+	Involuntary context switches: 8106
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 64
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

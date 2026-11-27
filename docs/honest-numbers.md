@@ -11,7 +11,17 @@
 - Attention changes little (1.3× slower), because its time goes to arithmetic, not to waiting for memory.
 - Against a Jetson core, estimated from the A100 core we measured, we are now about **3–5× behind on small matrix jobs** (with the deeper copy engine) and about **15–40× behind on attention**.
 
-**Chip size and power:** in progress. A full synthesis of this core with Vortex's open-source flow (Yosys + OpenSTA, the ASAP7 academic 7 nm-class library) is running. This report will be updated with square millimetres, watts and work per watt.
+**Chip size and power** (full synthesis with Vortex's open-source flow: Yosys + OpenSTA on the ASAP7 academic 7 nm-class library; section 5):
+- **Size: 1.65 mm²** before layout: 1.53 mm² of logic plus 0.11 mm² of memory blocks. About 2.3 mm² once placed.
+- **Top speed: 875 MHz.** It misses 1 GHz by 0.14 ns, close to Beacon's 840 MHz prediction.
+- **Power: about 2.1–2.9 W at 1 GHz** for realistic switching activity (2–10%), or 3.8 W at 20%. About 2 W of that is clocking **1.81 million flip-flops** every tick whether they're busy or not: this flow adds no clock gating.
+  - Vortex's default power method gives 18 W. That method lets switching activity multiply through the arithmetic to about 2 toggles per wire per tick, which is unrealistic.
+- **Work per watt on the small matrix job: roughly 5–20× behind a Jetson core** (about 10× in the middle). This is an estimate: our core's power is pre-layout, and the Jetson's per-core power is derived from measured board power.
+- **Where the watts and area go points to the next design levers:**
+  - clock gating;
+  - register files in dense memory instead of flip-flops (34% of the logic area);
+  - a smaller general maths unit (57% of the logic, nearly idle in AI jobs);
+  - the deeper copy engine.
 
 ## 1. What "realistic memory" means here
 
@@ -80,7 +90,57 @@ We have no Jetson measurement yet. The nearest measured NVIDIA core is the A100'
 - **Attention:** about **15–40× behind** (T4 to A100 cores), down from 28–78× in the yardstick's 16-thread comparison, though the memory is now realistic.
 - These Jetson figures are estimates. A Jetson Orin Nano Super ($249) would let us measure them the way we measured the other four chips.
 
-## 5. Caveats
+## 5. Size and power (synthesis, 27 Nov)
+
+The same core (32 threads × 8 warps, issue width 4, AI unit with WGMMA, copy engine with our coalescing, hardware exp unit, fp16 conversions). It went through Vortex's own open-source flow, the one behind its `asic_gate` check: Yosys maps the design to ASAP7 RVT standard cells at the typical corner, and OpenSTA reports timing and power. The target was 1 GHz. It ran for 7.2 hours and peaked at 59 GB of memory. We switched off Yosys's SAT-based sharing pass; with it, synthesis was projected at about 15 hours. Without it the area may read a few percent high.
+
+| | result |
+|---|---|
+| Standard cells | 14.75 million, **1.535 mm²** |
+| of which flip-flops | **1.81 million**, 0.528 mm² (34%): the register files and pipeline buffers are built from flip-flops |
+| Memory blocks (64 RAMs, estimated) | 0.111 mm² |
+| **Total before layout** | **1.65 mm²** (about 2.3 mm² placed at 70% density) |
+| Top speed | **875 MHz** (worst path misses 1 GHz by 0.143 ns) |
+| Where the logic goes (Beacon, same design) | general maths (FPU) 57%, AI unit 16%, issue 10%, integer 8%, load/store 5%, other 4% |
+
+**Power at 1 GHz**, with every wire switching at the given rate. This is pre-layout, so there is no clock tree and no wiring, and the memory blocks aren't counted.
+
+| switching activity (toggles per wire per tick) | 2% | 5% | 10% | 20% |
+|---|---:|---:|---:|---:|
+| total | 2.13 W | 2.48 W | 2.85 W | 3.78 W |
+| flip-flops (clocked every tick) | 2.01 W | 2.18 W | 2.26 W | 2.58 W |
+| other logic (and the remainder) | 0.12 W | 0.30 W | 0.59 W | 1.20 W |
+
+- **Vortex's default (vectorless) method gives 18.0 W**: 3.15 W in flip-flops and 14.9 W in logic.
+  - It propagates switching probabilities through the logic. In the multiplier and adder trees, that compounds to about 2 toggles per wire per tick, far above what a real workload produces, so it isn't used here.
+  - Vortex's own baseline core reports power the same way (1.0 W for its small 8 × 8 core), so the method is consistent; it just assumes a busy chip.
+- **Leakage** is about 1 mW in this library model.
+- **Most of the power is clocking idle storage.** At realistic activity, 80–94% of the power is the 1.81 million flip-flops being clocked every tick. Real GPUs switch off the clock to idle units (clock gating), which this open flow doesn't add. That is our biggest power lever.
+- **A realistic band** for our core, adding a clock tree and the memory blocks: about **2.5–4 W at 875 MHz–1 GHz**.
+- **Not done:** power from recorded switching activity. We ran the matrix job in the Verilog model with activity recording on. The run passed (93,007 ticks, within 0.4% of the other two models), but the activity file came out empty. Finding why is a follow-up.
+
+**Work per watt on the small matrix job (Jetson memory, copy engine 64 deep):**
+
+| | work per tick | clock | power | GFLOPS per watt |
+|---|---:|---:|---:|---:|
+| our core, standard setting | 44.9 | 875 MHz | 2.5–4 W | 20–31 |
+| our core, best setting | 69.8 | 875 MHz | 2.5–4 W | 31–49 |
+| a Jetson core (estimate) | about 223 | 1,020 MHz | about 1.1–1.9 W | 240–410 |
+
+The Jetson core's power is derived:
+- The Orin Nano Super's measured board power under AI load is 18–22 W in its uncapped mode (published llama.cpp measurements).
+- We assume 50–70% of that goes to the GPU, split 8 ways.
+- Its work per tick is the A100 core's on our yardstick.
+
+So we are **roughly 5–20× behind on work per watt**, about 10× in the middle. That holds even though the comparison flatters us: our core sits on a newer-class process (7 nm-class vs Samsung 8 nm) and excludes the shared cache and memory controllers.
+
+**What this says about our own core (plan step 4):**
+1. **Clock gating** idle units: most of today's power.
+2. **Register files in dense memory blocks** instead of flip-flops: a third of the logic area, and much of the clock load.
+3. **A smaller general maths unit:** 57% of the logic, nearly idle in AI work.
+4. **A deeper copy engine:** 2.9× on realistic memory, about 1% more storage cells.
+
+## 6. Caveats
 
 - Simulation, not silicon. One core with one eighth of the memory, not 8 cores sharing it.
 - Our matrix job is one product per core; NVIDIA's batched benchmark runs 16 per core and overlaps their memory traffic.
@@ -93,4 +153,5 @@ We have no Jetson measurement yet. The nearest measured NVIDIA core is the A100'
 - `../runs/battlefield/numbers.json`: multiply-adds per tick for every run.
 - `../runs/battlefield/jetson_orin_nano_core.json`: the memory profile, with its sources.
 - `../runs/battlefield/calib_*.out`, `defmem.out`: the latency calibration and the default-memory measurement.
+- `../runs/battlefield/synth/`: synthesis area (`stat_lib.rpt`), memory-block area (`sram_area.rpt`), timing (`setup.rpt`, `worst_slack.rpt`), vectorless power (`power.rpt`), power at 2–20% activity (`power_range.log`), the synthesis log, and the activity-recording run log.
 - Scripts: `../scripts/bf_*.sh`.
